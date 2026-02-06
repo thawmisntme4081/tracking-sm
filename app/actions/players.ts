@@ -13,7 +13,7 @@ export async function savePlayer(values: PlayerSchema) {
     club: clubId,
   } = values;
   try {
-    const { id } = await prisma.player.create({
+    await prisma.player.create({
       data: {
         firstName,
         lastName,
@@ -22,13 +22,17 @@ export async function savePlayer(values: PlayerSchema) {
         values: {
           create: {
             value: currentValue,
-            date: new Date(),
+            date: new Date("2025-07-11"),
+          },
+        },
+        histories: {
+          create: {
+            clubId,
+            dateJoined: new Date("2025-07-11"),
           },
         },
       },
     });
-
-    console.log(id);
 
     return {
       message: "Store player successfully",
