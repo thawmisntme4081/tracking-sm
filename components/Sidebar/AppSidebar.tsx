@@ -3,11 +3,10 @@
 import {
   AudioWaveform,
   BookOpen,
-  Bot,
   Command,
   Frame,
   GalleryVerticalEnd,
-  Map,
+  Map as MapIcon,
   PieChart,
   Settings2,
   SquareTerminal,
@@ -15,7 +14,6 @@ import {
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar";
@@ -30,7 +28,7 @@ const data = {
   },
   teams: [
     {
-      name: "Acme Inc",
+      name: "Peek FC",
       logo: GalleryVerticalEnd,
     },
     {
@@ -44,40 +42,17 @@ const data = {
   ],
   navMain: [
     {
-      title: "Playground",
+      title: "Seasons",
       url: "#",
       icon: SquareTerminal,
       isActive: true,
       items: [
         {
-          title: "History",
+          title: "2026/2027",
           url: "#",
         },
         {
-          title: "Starred",
-          url: "#",
-        },
-        {
-          title: "Settings",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Models",
-      url: "#",
-      icon: Bot,
-      items: [
-        {
-          title: "Genesis",
-          url: "#",
-        },
-        {
-          title: "Explorer",
-          url: "#",
-        },
-        {
-          title: "Quantum",
+          title: "2025/2026",
           url: "#",
         },
       ],
@@ -143,7 +118,7 @@ const data = {
     {
       name: "Travel",
       url: "#",
-      icon: Map,
+      icon: MapIcon,
     },
   ],
 };
