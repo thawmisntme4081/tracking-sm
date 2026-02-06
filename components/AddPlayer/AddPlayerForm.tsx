@@ -6,6 +6,15 @@ import { toast } from "sonner";
 import { savePlayer } from "@/app/actions/players";
 import { Button } from "@/components/ui/button";
 import {
+  Combobox,
+  ComboboxCollection,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+} from "@/components/ui/combobox";
+import {
   Form,
   FormControl,
   FormField,
@@ -21,6 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useClubSearch } from "@/hooks/use-club-search";
 import { tryCatch } from "@/lib/tryCatch";
 import { type PlayerSchema, playerSchema } from "./validation";
 
@@ -39,8 +49,20 @@ export default function AddPlayerForm() {
     defaultValues,
   });
 
+  const {
+    clubQuery,
+    setClubQuery,
+    clubOptions,
+    selectedClub,
+    setSelectedClub,
+    clubLoading,
+    clubAnchor,
+    resetClubSearch,
+  } = useClubSearch();
+
   const resetForm = () => {
     form.reset(defaultValues);
+    resetClubSearch();
   };
 
   const onSubmit = form.handleSubmit(async (values) => {
@@ -119,7 +141,48 @@ export default function AddPlayerForm() {
             <FormItem>
               <FormLabel>Club</FormLabel>
               <FormControl>
-                <Input {...field} />
+                <div ref={clubAnchor} className="w-full">
+                  <Combobox
+                    items={clubOptions}
+                    value={selectedClub}
+                    inputValue={clubQuery}
+                    itemToStringLabel={(club) => club?.name ?? ""}
+                    itemToStringValue={(club) => club?.id ?? ""}
+                    onInputValueChange={(value, details) => {
+                      if (
+                        details.reason === "input-change" ||
+                        details.reason === "input-clear"
+                      ) {
+                        setClubQuery(value);
+                        if (selectedClub && value !== selectedClub.name) {
+                          setSelectedClub(null);
+                          field.onChange("");
+                        }
+                      }
+                    }}
+                    onValueChange={(club) => {
+                      setSelectedClub(club ?? null);
+                      field.onChange(club?.id ?? "");
+                      setClubQuery(club?.name ?? "");
+                    }}
+                  >
+                    <ComboboxInput placeholder="Search club" showClear />
+                    <ComboboxContent anchor={clubAnchor}>
+                      <ComboboxList>
+                        <ComboboxCollection>
+                          {(club) => (
+                            <ComboboxItem key={club.id} value={club}>
+                              {club.name}
+                            </ComboboxItem>
+                          )}
+                        </ComboboxCollection>
+                        <ComboboxEmpty>
+                          {clubLoading ? "Loading..." : "No clubs found"}
+                        </ComboboxEmpty>
+                      </ComboboxList>
+                    </ComboboxContent>
+                  </Combobox>
+                </div>
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -137,7 +200,10 @@ export default function AddPlayerForm() {
                   value={field.value ?? ""}
                   onValueChange={field.onChange}
                 >
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger
+                    className="w-full"
+                    aria-invalid={!!form.formState.errors.position}
+                  >
                     <SelectValue placeholder="Select position" />
                   </SelectTrigger>
                   <SelectContent>
