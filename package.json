@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "init": "prisma init --db --output ../app/generated/prisma",
     "migrate": "prisma migrate dev --name init",
+    "generate": "prisma generate",
     "lint": "biome check",
     "format": "biome format --write"
   },
