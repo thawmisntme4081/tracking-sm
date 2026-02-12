@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-import HomeOnlyHeaderLink from "@/components/HomeOnlyHeaderLink";
 import AppSidebar from "@/components/Sidebar/AppSidebar";
 import {
   SidebarInset,
@@ -9,6 +7,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/sonner";
+import "./globals.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -41,9 +40,6 @@ export default function RootLayout({
             <header className="flex h-16 w-full shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
               <div className="flex flex-1 items-center justify-between gap-2 px-3">
                 <SidebarTrigger />
-                <HomeOnlyHeaderLink href="/add-player">
-                  Add player
-                </HomeOnlyHeaderLink>
               </div>
             </header>
             <div className="flex flex-1 flex-col gap-4 p-4 pt-0">

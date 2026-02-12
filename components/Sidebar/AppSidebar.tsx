@@ -21,11 +21,6 @@ import NavMain from "./NavMain";
 import TeamSwitcher from "./TeamSwitcher";
 
 const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
   teams: [
     {
       name: "Peek FC",
@@ -48,12 +43,12 @@ const data = {
       isActive: true,
       items: [
         {
-          title: "2026/2027",
-          url: "#",
+          title: "2026",
+          url: "/",
         },
         {
-          title: "2025/2026",
-          url: "#",
+          title: "2025",
+          url: "/",
         },
       ],
     },

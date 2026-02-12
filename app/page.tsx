@@ -1,12 +1,27 @@
-export default function Home() {
+import { getPlayersForTable } from "@/app/actions/players";
+import PlayersTable, {
+  type PlayerRow,
+} from "@/components/players/PlayersTable";
+
+export default async function Home() {
+  const players = await getPlayersForTable();
+
+  const data: PlayerRow[] = players.map((player) => ({
+    id: player.id,
+    firstName: player.firstName,
+    lastName: player.lastName,
+    yearOfBirth: player.yearOfBirth,
+    position: player.position,
+    club: player.histories[0]?.club?.name ?? null,
+    currentValue: player.values[0]?.value ?? null,
+  }));
+
   return (
-    <>
-      <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-        <div className="bg-muted/50 aspect-video rounded-xl" />
-        <div className="bg-muted/50 aspect-video rounded-xl" />
-        <div className="bg-muted/50 aspect-video rounded-xl" />
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-semibold">Players</h1>
       </div>
-      <div className="bg-muted/50 min-h-screen flex-1 rounded-xl md:min-h-min" />
-    </>
+      <PlayersTable data={data} />
+    </div>
   );
 }

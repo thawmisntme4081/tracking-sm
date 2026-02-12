@@ -62,7 +62,8 @@ export async function importPlayersFromCsv(
   rows: PlayerSchema[],
 ): Promise<ImportPlayersResult> {
   const errors: ImportPlayersResult["errors"] = [];
-  const createOps: ReturnType<typeof prisma.player.create>[] = [];
+  const clubIdCache = new Map<string, string | null>();
+  let createdCount = 0;
 
   for (const [index, row] of rows.entries()) {
     const parsed = playerSchema.safeParse(row);
@@ -78,7 +79,10 @@ export async function importPlayersFromCsv(
     let clubId: string | null = null;
 
     if (normalizedClub) {
-      if (uuidRegex.test(normalizedClub)) {
+      const clubKey = normalizedClub.toLowerCase();
+      if (clubIdCache.has(clubKey)) {
+        clubId = clubIdCache.get(clubKey) ?? null;
+      } else if (uuidRegex.test(normalizedClub)) {
         const club = await prisma.club.findUnique({
           where: { id: normalizedClub },
           select: { id: true },
@@ -88,9 +92,11 @@ export async function importPlayersFromCsv(
             row: index + 2,
             message: `Club id not found: ${normalizedClub}`,
           });
+          clubIdCache.set(clubKey, null);
           continue;
         }
         clubId = club.id;
+        clubIdCache.set(clubKey, clubId);
       } else {
         const club = await prisma.club.findFirst({
           where: {
@@ -106,15 +112,17 @@ export async function importPlayersFromCsv(
             row: index + 2,
             message: `Club name not found: ${normalizedClub}`,
           });
+          clubIdCache.set(clubKey, null);
           continue;
         }
         clubId = club.id;
+        clubIdCache.set(clubKey, clubId);
       }
     }
 
-    const dateJoined = new Date("2025-07-11");
-    createOps.push(
-      prisma.player.create({
+    try {
+      const dateJoined = new Date("2025-07-11");
+      await prisma.player.create({
         data: {
           firstName: parsed.data.firstName,
           lastName: parsed.data.lastName,
@@ -137,17 +145,53 @@ export async function importPlayersFromCsv(
               }
             : {}),
         },
-      }),
-    );
-  }
-
-  if (createOps.length > 0) {
-    await prisma.$transaction(createOps);
+      });
+      createdCount += 1;
+    } catch {
+      errors.push({
+        row: index + 2,
+        message: "Failed to create player",
+      });
+    }
   }
 
   return {
-    createdCount: createOps.length,
+    createdCount,
     errorCount: errors.length,
     errors,
   };
+}
+
+export async function getPlayersForTable() {
+  return prisma.player.findMany({
+    orderBy: [{ updatedAt: "desc" }],
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      yearOfBirth: true,
+      position: true,
+      isRetired: true,
+      histories: {
+        orderBy: { dateJoined: "desc" },
+        take: 1,
+        select: {
+          club: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      },
+      values: {
+        orderBy: { date: "desc" },
+        take: 1,
+        select: {
+          value: true,
+          date: true,
+        },
+      },
+    },
+  });
 }
