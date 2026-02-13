@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useRef, useState } from "react";
-import { toast } from "sonner";
-import { importPlayersFromCsv } from "@/app/actions/players";
-import { Button } from "@/components/ui/button";
+import { useRef, useState } from 'react';
+import { toast } from 'sonner';
+import { importPlayersFromCsv } from '@/app/actions/players';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -11,27 +11,27 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { parseCsv } from "./csv";
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { parseCsv } from './csv';
 
 type CsvRow = {
   firstName: string;
   lastName: string;
   yearOfBirth: number;
   club?: string;
-  position: "GK" | "DF" | "MF" | "CF";
+  position: 'GK' | 'DF' | 'MF' | 'CF';
   currentValue: number;
 };
 
 const requiredColumns = [
-  "firstName",
-  "lastName",
-  "yearOfBirth",
-  "club",
-  "position",
-  "currentValue",
+  'firstName',
+  'lastName',
+  'yearOfBirth',
+  'club',
+  'position',
+  'currentValue',
 ] as const;
 
 export default function CsvImportForm() {
@@ -41,7 +41,7 @@ export default function CsvImportForm() {
   const handleUpload = async () => {
     const file = inputRef.current?.files?.[0];
     if (!file) {
-      toast.error("Please select a CSV file first.");
+      toast.error('Please select a CSV file first.');
       return;
     }
 
@@ -51,7 +51,7 @@ export default function CsvImportForm() {
       const { headers, rows } = parseCsv(text);
 
       if (headers.length === 0) {
-        toast.error("CSV file is empty.");
+        toast.error('CSV file is empty.');
         return;
       }
 
@@ -61,7 +61,7 @@ export default function CsvImportForm() {
       );
 
       if (missingColumns.length > 0) {
-        toast.error(`Missing required columns: ${missingColumns.join(", ")}`);
+        toast.error(`Missing required columns: ${missingColumns.join(', ')}`);
         return;
       }
 
@@ -70,14 +70,14 @@ export default function CsvImportForm() {
       );
 
       const parsedRows: CsvRow[] = rows.map((row) => ({
-        firstName: row[headerIndex.firstName] ?? "",
-        lastName: row[headerIndex.lastName] ?? "",
-        yearOfBirth: Number(row[headerIndex.yearOfBirth] ?? ""),
+        firstName: row[headerIndex.firstName] ?? '',
+        lastName: row[headerIndex.lastName] ?? '',
+        yearOfBirth: Number(row[headerIndex.yearOfBirth] ?? ''),
         club: row[headerIndex.club] ?? undefined,
         position: (
-          row[headerIndex.position] ?? ""
-        ).toUpperCase() as CsvRow["position"],
-        currentValue: Number(row[headerIndex.currentValue] ?? ""),
+          row[headerIndex.position] ?? ''
+        ).toUpperCase() as CsvRow['position'],
+        currentValue: Number(row[headerIndex.currentValue] ?? ''),
       }));
 
       const result = await importPlayersFromCsv(parsedRows);
@@ -90,16 +90,16 @@ export default function CsvImportForm() {
         const preview = result.errors
           .slice(0, 3)
           .map((error) => `Row ${error.row}: ${error.message}`)
-          .join(" | ");
+          .join(' | ');
         toast.error(`Failed ${result.errorCount} row(s). ${preview}`);
       }
 
       if (result.createdCount === 0 && result.errorCount === 0) {
-        toast.info("No rows to import.");
+        toast.info('No rows to import.');
       }
     } catch (error) {
       console.error(error);
-      toast.error("Failed to import CSV.");
+      toast.error('Failed to import CSV.');
     } finally {
       setIsUploading(false);
     }
@@ -111,7 +111,7 @@ export default function CsvImportForm() {
         <CardTitle>CSV Import</CardTitle>
         <CardDescription>
           Upload a CSV file with columns: firstName, lastName, yearOfBirth,
-          club, position, currentValue.
+          clubId, position, currentValue.
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4">
@@ -122,7 +122,7 @@ export default function CsvImportForm() {
       </CardContent>
       <CardFooter>
         <Button type="button" onClick={handleUpload} disabled={isUploading}>
-          {isUploading ? "Uploading..." : "Upload"}
+          {isUploading ? 'Uploading...' : 'Upload'}
         </Button>
       </CardFooter>
     </Card>

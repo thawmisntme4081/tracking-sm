@@ -1,7 +1,7 @@
-import { notFound } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import prisma from "@/lib/prisma";
-import { PlayerValueChart } from "./player-value-chart";
+import { notFound } from 'next/navigation';
+import prisma from '@/lib/prisma';
+import { PlayerValueChart } from './player-value-chart';
+import { TransferHistory } from './transfer-history';
 
 type PlayerDetailPageProps = {
   params: Promise<{ id: string }>;
@@ -14,14 +14,15 @@ export default async function PlayerDetailPage({
 
   const player = await prisma.player.findUnique({
     where: { id },
-    include: {
-      histories: {
-        orderBy: { dateJoined: "desc" },
-        take: 1,
-        include: { club: true },
-      },
+    select: {
+      firstName: true,
+      lastName: true,
       values: {
-        orderBy: { date: "asc" },
+        orderBy: { date: 'asc' },
+        select: {
+          date: true,
+          value: true,
+        },
       },
     },
   });
@@ -30,12 +31,26 @@ export default async function PlayerDetailPage({
     notFound();
   }
 
-  const clubName = player.histories[0]?.club?.name ?? "—";
-  const currentValue = player.values[player.values.length - 1]?.value ?? null;
+  const playerHistory = await prisma.playerHistory.findMany({
+    where: { playerId: id },
+    orderBy: { dateJoined: 'desc' },
+    select: {
+      id: true,
+      dateJoined: true,
+      buyValue: true,
+      club: {
+        select: {
+          name: true,
+        },
+      },
+    },
+  });
+
   const valueHistory = player.values.map(({ date, value }) => ({
     date: date.toISOString(),
     value,
   }));
+  const currentValue = player.values[player.values.length - 1]?.value ?? null;
 
   return (
     <section className="space-y-6">
@@ -43,28 +58,8 @@ export default async function PlayerDetailPage({
         {player.firstName} {player.lastName.toUpperCase()}
       </h1>
       <div className="grid grid-cols-2 gap-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>Player Details</CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-2 text-sm">
-            <p>Year of birth: {player.yearOfBirth}</p>
-            <p>Position: {player.position}</p>
-            <p>Current club: {clubName}</p>
-            <p>
-              Current value:{" "}
-              {currentValue !== null ? currentValue.toLocaleString() : "—"}
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Player Value History</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <PlayerValueChart data={valueHistory} type="linear" />
-          </CardContent>
-        </Card>
+        <TransferHistory data={playerHistory} currentValue={currentValue} />
+        <PlayerValueChart data={valueHistory} type="linear" />
       </div>
     </section>
   );

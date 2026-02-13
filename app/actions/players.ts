@@ -1,10 +1,10 @@
-"use server";
+'use server';
 
 import {
   type PlayerSchema,
   playerSchema,
-} from "@/components/AddPlayer/validation";
-import prisma from "@/lib/prisma";
+} from '@/components/AddPlayer/validation';
+import prisma from '@/lib/prisma';
 
 const uuidRegex =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -25,7 +25,7 @@ export async function savePlayer(values: PlayerSchema) {
               values: {
                 create: {
                   value: currentValue,
-                  date: new Date("2025-07-11"),
+                  date: new Date('2025-07-01'),
                 },
               },
             }
@@ -35,7 +35,7 @@ export async function savePlayer(values: PlayerSchema) {
               histories: {
                 create: {
                   clubId: clubId,
-                  dateJoined: new Date("2025-07-11"),
+                  dateJoined: new Date('2025-07-01'),
                 },
               },
             }
@@ -44,11 +44,11 @@ export async function savePlayer(values: PlayerSchema) {
     });
 
     return {
-      message: "Store player successfully",
+      message: 'Store player successfully',
     };
   } catch (error) {
     console.log(error);
-    throw new Error("Failed to store player");
+    throw new Error('Failed to store player');
   }
 }
 
@@ -61,7 +61,7 @@ export type ImportPlayersResult = {
 export async function importPlayersFromCsv(
   rows: PlayerSchema[],
 ): Promise<ImportPlayersResult> {
-  const errors: ImportPlayersResult["errors"] = [];
+  const errors: ImportPlayersResult['errors'] = [];
   const clubIdCache = new Map<string, string | null>();
   let createdCount = 0;
 
@@ -70,7 +70,7 @@ export async function importPlayersFromCsv(
     if (!parsed.success) {
       errors.push({
         row: index + 2,
-        message: parsed.error.errors[0]?.message ?? "Invalid row data",
+        message: parsed.error.errors[0]?.message ?? 'Invalid row data',
       });
       continue;
     }
@@ -102,7 +102,7 @@ export async function importPlayersFromCsv(
           where: {
             name: {
               equals: normalizedClub,
-              mode: "insensitive",
+              mode: 'insensitive',
             },
           },
           select: { id: true },
@@ -121,7 +121,7 @@ export async function importPlayersFromCsv(
     }
 
     try {
-      const dateJoined = new Date("2025-07-11");
+      const dateJoined = new Date('2025-07-01');
       await prisma.player.create({
         data: {
           firstName: parsed.data.firstName,
@@ -150,7 +150,7 @@ export async function importPlayersFromCsv(
     } catch {
       errors.push({
         row: index + 2,
-        message: "Failed to create player",
+        message: 'Failed to create player',
       });
     }
   }
@@ -164,7 +164,7 @@ export async function importPlayersFromCsv(
 
 export async function getPlayersForTable() {
   return prisma.player.findMany({
-    orderBy: [{ updatedAt: "desc" }],
+    orderBy: [{ updatedAt: 'desc' }],
     select: {
       id: true,
       firstName: true,
@@ -173,7 +173,7 @@ export async function getPlayersForTable() {
       position: true,
       isRetired: true,
       histories: {
-        orderBy: { dateJoined: "desc" },
+        orderBy: { dateJoined: 'desc' },
         take: 1,
         select: {
           club: {
@@ -185,7 +185,7 @@ export async function getPlayersForTable() {
         },
       },
       values: {
-        orderBy: { date: "desc" },
+        orderBy: { date: 'desc' },
         take: 1,
         select: {
           value: true,
