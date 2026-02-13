@@ -27,14 +27,14 @@ model Club {
 }
 
 model PlayerHistory {
-  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  playerId   String    @db.Uuid
-  clubId     String?   @db.Uuid
-  dateJoined DateTime? @default(dbgenerated("'2025-07-11 00:00:00'::timestamp without time zone"))
-  buyValue   Int?      @default(0)
-  sellValue  Int?
-  club       Club?     @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  player     Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  playerId    String    @db.Uuid
+  clubId      String?   @db.Uuid
+  dateJoined  DateTime? @default(dbgenerated("'2025-07-01 00:00:00'::timestamp without time zone"))
+  buyValue    Int?      
+  marketValue Int?
+  club        Club?     @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  player      Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
 }
 
 model PlayerValue {

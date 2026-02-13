@@ -28,9 +28,9 @@ CREATE TABLE "PlayerHistory" (
     "id" UUID NOT NULL DEFAULT gen_random_uuid(),
     "playerId" UUID NOT NULL,
     "clubId" UUID,
-    "dateJoined" TIMESTAMP(3) DEFAULT TIMESTAMP '2025-07-11',
-    "buyValue" INTEGER DEFAULT 0,
-    "sellValue" INTEGER,
+    "dateJoined" TIMESTAMP(3) DEFAULT '2025-07-01 00:00:00'::timestamp without time zone,
+    "buyValue" INTEGER,
+    "marketValue" INTEGER,
 
     CONSTRAINT "PlayerHistory_pkey" PRIMARY KEY ("id")
 );
@@ -46,10 +46,10 @@ CREATE TABLE "PlayerValue" (
 );
 
 -- AddForeignKey
-ALTER TABLE "PlayerHistory" ADD CONSTRAINT "PlayerHistory_playerId_fkey" FOREIGN KEY ("playerId") REFERENCES "Player"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "PlayerHistory" ADD CONSTRAINT "PlayerHistory_clubId_fkey" FOREIGN KEY ("clubId") REFERENCES "Club"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "PlayerHistory" ADD CONSTRAINT "PlayerHistory_clubId_fkey" FOREIGN KEY ("clubId") REFERENCES "Club"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "PlayerHistory" ADD CONSTRAINT "PlayerHistory_playerId_fkey" FOREIGN KEY ("playerId") REFERENCES "Player"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "PlayerValue" ADD CONSTRAINT "PlayerValue_playerId_fkey" FOREIGN KEY ("playerId") REFERENCES "Player"("id") ON DELETE CASCADE ON UPDATE CASCADE;

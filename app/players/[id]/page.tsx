@@ -38,6 +38,7 @@ export default async function PlayerDetailPage({
       id: true,
       dateJoined: true,
       buyValue: true,
+      marketValue: true,
       club: {
         select: {
           name: true,
@@ -50,7 +51,6 @@ export default async function PlayerDetailPage({
     date: date.toISOString(),
     value,
   }));
-  const currentValue = player.values[player.values.length - 1]?.value ?? null;
 
   return (
     <section className="space-y-6">
@@ -58,7 +58,7 @@ export default async function PlayerDetailPage({
         {player.firstName} {player.lastName.toUpperCase()}
       </h1>
       <div className="grid grid-cols-2 gap-4">
-        <TransferHistory data={playerHistory} currentValue={currentValue} />
+        <TransferHistory data={playerHistory} />
         <PlayerValueChart data={valueHistory} type="linear" />
       </div>
     </section>

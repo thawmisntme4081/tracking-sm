@@ -12,6 +12,7 @@ type TransferHistoryItem = {
   id: string;
   dateJoined: Date | null;
   buyValue: number | null;
+  marketValue: number | null;
   club: {
     name: string;
   } | null;
@@ -19,7 +20,6 @@ type TransferHistoryItem = {
 
 type TransferHistoryProps = {
   data: TransferHistoryItem[];
-  currentValue: number | null;
 };
 
 function formatDate(date: Date | null) {
@@ -38,7 +38,7 @@ function formatMoney(value: number | null) {
   return value.toLocaleString();
 }
 
-export function TransferHistory({ data, currentValue }: TransferHistoryProps) {
+export function TransferHistory({ data }: TransferHistoryProps) {
   return (
     <Card>
       <CardHeader>
@@ -69,7 +69,7 @@ export function TransferHistory({ data, currentValue }: TransferHistoryProps) {
                     <TableCell>{formatDate(history.dateJoined)}</TableCell>
                     <TableCell>{leftClub}</TableCell>
                     <TableCell>{joinedClub}</TableCell>
-                    <TableCell>{formatMoney(currentValue)}</TableCell>
+                    <TableCell>{formatMoney(history.marketValue)}</TableCell>
                     <TableCell>{formatMoney(history.buyValue)}</TableCell>
                   </TableRow>
                 );

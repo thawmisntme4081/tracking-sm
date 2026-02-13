@@ -4,16 +4,15 @@ import {
   type PlayerSchema,
   playerSchema,
 } from '@/components/AddPlayer/validation';
+import { INIT_DATE } from '@/constants';
 import prisma from '@/lib/prisma';
 
-const uuidRegex =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
 export async function savePlayer(values: PlayerSchema) {
-  const { firstName, lastName, yearOfBirth, position, currentValue, club } =
+  const { firstName, lastName, yearOfBirth, position, currentValue, clubId } =
     values;
-  const clubId = club?.trim() ? club : null;
+
   try {
+    const dateJoined = new Date(INIT_DATE);
     await prisma.player.create({
       data: {
         firstName,
@@ -25,21 +24,18 @@ export async function savePlayer(values: PlayerSchema) {
               values: {
                 create: {
                   value: currentValue,
-                  date: new Date('2025-07-01'),
+                  date: new Date(INIT_DATE),
                 },
               },
             }
           : {}),
-        ...(clubId
-          ? {
-              histories: {
-                create: {
-                  clubId: clubId,
-                  dateJoined: new Date('2025-07-01'),
-                },
-              },
-            }
-          : {}),
+        histories: {
+          create: {
+            clubId: clubId?.trim() ?? null,
+            dateJoined,
+            marketValue: currentValue,
+          },
+        },
       },
     });
 
@@ -62,7 +58,7 @@ export async function importPlayersFromCsv(
   rows: PlayerSchema[],
 ): Promise<ImportPlayersResult> {
   const errors: ImportPlayersResult['errors'] = [];
-  const clubIdCache = new Map<string, string | null>();
+  const clubExistsCache = new Map<string, boolean>();
   let createdCount = 0;
 
   for (const [index, row] of rows.entries()) {
@@ -75,75 +71,55 @@ export async function importPlayersFromCsv(
       continue;
     }
 
-    const normalizedClub = parsed.data.club?.trim();
-    let clubId: string | null = null;
+    const {
+      clubId,
+      firstName,
+      lastName,
+      yearOfBirth,
+      position,
+      currentValue: value,
+    } = parsed.data;
 
-    if (normalizedClub) {
-      const clubKey = normalizedClub.toLowerCase();
-      if (clubIdCache.has(clubKey)) {
-        clubId = clubIdCache.get(clubKey) ?? null;
-      } else if (uuidRegex.test(normalizedClub)) {
+    if (clubId) {
+      const clubKey = clubId.toLowerCase();
+      if (!clubExistsCache.has(clubKey)) {
         const club = await prisma.club.findUnique({
-          where: { id: normalizedClub },
+          where: { id: clubId },
           select: { id: true },
         });
-        if (!club) {
-          errors.push({
-            row: index + 2,
-            message: `Club id not found: ${normalizedClub}`,
-          });
-          clubIdCache.set(clubKey, null);
-          continue;
-        }
-        clubId = club.id;
-        clubIdCache.set(clubKey, clubId);
-      } else {
-        const club = await prisma.club.findFirst({
-          where: {
-            name: {
-              equals: normalizedClub,
-              mode: 'insensitive',
-            },
-          },
-          select: { id: true },
+        clubExistsCache.set(clubKey, Boolean(club));
+      }
+
+      if (!clubExistsCache.get(clubKey)) {
+        errors.push({
+          row: index + 2,
+          message: `Club id not found: ${clubId}`,
         });
-        if (!club) {
-          errors.push({
-            row: index + 2,
-            message: `Club name not found: ${normalizedClub}`,
-          });
-          clubIdCache.set(clubKey, null);
-          continue;
-        }
-        clubId = club.id;
-        clubIdCache.set(clubKey, clubId);
+        continue;
       }
     }
 
     try {
-      const dateJoined = new Date('2025-07-01');
+      const dateJoined = new Date(INIT_DATE);
       await prisma.player.create({
         data: {
-          firstName: parsed.data.firstName,
-          lastName: parsed.data.lastName,
-          yearOfBirth: parsed.data.yearOfBirth,
-          position: parsed.data.position,
+          firstName,
+          lastName,
+          yearOfBirth,
+          position,
           values: {
             create: {
-              value: parsed.data.currentValue,
+              value,
               date: dateJoined,
             },
           },
-          ...(clubId
-            ? {
-                histories: {
-                  create: {
-                    clubId,
-                    dateJoined,
-                  },
-                },
-              }
-            : {}),
+          histories: {
+            create: {
+              clubId: clubId ?? null,
+              dateJoined,
+              marketValue: value,
+            },
+          },
         },
       });
       createdCount += 1;

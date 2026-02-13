@@ -8,6 +8,7 @@
     "start": "next start",
     "init": "prisma init --db --output ../app/generated/prisma",
     "migrate": "prisma migrate dev --name init",
+    "reset": "prisma migrate reset",
     "generate": "prisma generate",
     "lint": "biome check",
     "format": "biome format --write"

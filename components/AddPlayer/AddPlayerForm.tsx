@@ -1,51 +1,51 @@
-"use client";
+'use client';
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { type FieldPath, useForm } from "react-hook-form";
-import { toast } from "sonner";
-import { savePlayer } from "@/app/actions/players";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Form } from "@/components/ui/form";
-import { useClubSearch } from "@/hooks/use-club-search";
-import { tryCatch } from "@/lib/tryCatch";
-import ComboboxField from "../common/ComboboxField";
-import InputField from "../common/InputField";
-import SelectField from "../common/SelectField";
-import { type PlayerSchema, playerSchema } from "./validation";
+import { zodResolver } from '@hookform/resolvers/zod';
+import { type FieldPath, useForm } from 'react-hook-form';
+import { toast } from 'sonner';
+import { savePlayer } from '@/app/actions/players';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
+import { Form } from '@/components/ui/form';
+import { useClubSearch } from '@/hooks/use-club-search';
+import { tryCatch } from '@/lib/tryCatch';
+import ComboboxField from '../common/ComboboxField';
+import InputField from '../common/InputField';
+import SelectField from '../common/SelectField';
+import { type PlayerSchema, playerSchema } from './validation';
 
 type InputFieldConfig = {
   name: FieldPath<PlayerSchema>;
   label: string;
-  type?: "text" | "number";
+  type?: 'text' | 'number';
   parseNumber?: boolean;
 };
 
 const textFields = [
-  { name: "firstName", label: "First Name" },
-  { name: "lastName", label: "Last Name" },
+  { name: 'firstName', label: 'First Name' },
+  { name: 'lastName', label: 'Last Name' },
 ] satisfies InputFieldConfig[];
 
 const numberFields = [
   {
-    name: "yearOfBirth",
-    label: "Year of Birth",
-    type: "number",
+    name: 'yearOfBirth',
+    label: 'Year of Birth',
+    type: 'number',
     parseNumber: true,
   },
   {
-    name: "currentValue",
-    label: "Current Value",
-    type: "number",
+    name: 'currentValue',
+    label: 'Current Value',
+    type: 'number',
     parseNumber: true,
   },
 ] satisfies InputFieldConfig[];
 
 export default function AddPlayerForm() {
   const defaultValues: Partial<PlayerSchema> = {
-    firstName: "",
-    lastName: "",
-    club: "",
+    firstName: '',
+    lastName: '',
+    clubId: '',
     yearOfBirth: undefined,
     position: undefined,
     currentValue: undefined,
@@ -97,20 +97,20 @@ export default function AddPlayerForm() {
 
             <ComboboxField
               control={form.control}
-              name="club"
+              name="clubId"
               label="Club"
               items={clubOptions}
               value={selectedClub}
               inputValue={clubQuery}
               onInputValueChange={(value, details) => {
                 if (
-                  details.reason === "input-change" ||
-                  details.reason === "input-clear"
+                  details.reason === 'input-change' ||
+                  details.reason === 'input-clear'
                 ) {
                   setClubQuery(value);
                   if (selectedClub && value !== selectedClub.name) {
                     setSelectedClub(null);
-                    form.setValue("club", "", {
+                    form.setValue('clubId', '', {
                       shouldDirty: true,
                       shouldTouch: true,
                       shouldValidate: true,
@@ -120,10 +120,10 @@ export default function AddPlayerForm() {
               }}
               onValueChange={(club) => {
                 setSelectedClub(club ?? null);
-                setClubQuery(club?.name ?? "");
+                setClubQuery(club?.name ?? '');
               }}
-              getItemLabel={(club) => club?.name ?? ""}
-              getItemValue={(club) => club?.id ?? ""}
+              getItemLabel={(club) => club?.name ?? ''}
+              getItemValue={(club) => club?.id ?? ''}
               placeholder="Search club"
               showClear
               loading={clubLoading}
@@ -131,17 +131,17 @@ export default function AddPlayerForm() {
               anchor={clubAnchor}
             />
 
-            <SelectField<PlayerSchema, "GK" | "DF" | "MF" | "CF">
+            <SelectField<PlayerSchema, 'GK' | 'DF' | 'MF' | 'CF'>
               control={form.control}
               name="position"
               label="Position"
               placeholder="Select position"
               ariaInvalid={!!form.formState.errors.position}
               options={[
-                { value: "GK", label: "GK" },
-                { value: "DF", label: "DF" },
-                { value: "MF", label: "MF" },
-                { value: "CF", label: "CF" },
+                { value: 'GK', label: 'GK' },
+                { value: 'DF', label: 'DF' },
+                { value: 'MF', label: 'MF' },
+                { value: 'CF', label: 'CF' },
               ]}
             />
 

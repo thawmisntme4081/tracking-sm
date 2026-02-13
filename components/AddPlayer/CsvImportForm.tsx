@@ -29,7 +29,7 @@ const requiredColumns = [
   'firstName',
   'lastName',
   'yearOfBirth',
-  'club',
+  'clubId',
   'position',
   'currentValue',
 ] as const;
@@ -73,7 +73,7 @@ export default function CsvImportForm() {
         firstName: row[headerIndex.firstName] ?? '',
         lastName: row[headerIndex.lastName] ?? '',
         yearOfBirth: Number(row[headerIndex.yearOfBirth] ?? ''),
-        club: row[headerIndex.club] ?? undefined,
+        clubId: row[headerIndex.clubId] ?? undefined,
         position: (
           row[headerIndex.position] ?? ''
         ).toUpperCase() as CsvRow['position'],
