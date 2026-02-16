@@ -7,7 +7,6 @@ import { savePlayer } from '@/app/actions/players';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Form } from '@/components/ui/form';
-import { useClubSearch } from '@/hooks/use-club-search';
 import { tryCatch } from '@/lib/tryCatch';
 import ComboboxField from '../common/ComboboxField';
 import InputField from '../common/InputField';
@@ -41,7 +40,11 @@ const numberFields = [
   },
 ] satisfies InputFieldConfig[];
 
-export default function AddPlayerForm() {
+type Props = {
+  clubs: ClubOption[];
+};
+
+export default function AddPlayerForm({ clubs }: Props) {
   const defaultValues: Partial<PlayerSchema> = {
     firstName: '',
     lastName: '',
@@ -56,20 +59,8 @@ export default function AddPlayerForm() {
     defaultValues,
   });
 
-  const {
-    clubQuery,
-    setClubQuery,
-    clubOptions,
-    selectedClub,
-    setSelectedClub,
-    clubLoading,
-    clubAnchor,
-    resetClubSearch,
-  } = useClubSearch();
-
   const resetForm = () => {
     form.reset(defaultValues);
-    resetClubSearch();
   };
 
   const onSubmit = form.handleSubmit(async (values) => {
@@ -99,36 +90,10 @@ export default function AddPlayerForm() {
               control={form.control}
               name="clubId"
               label="Club"
-              items={clubOptions}
-              value={selectedClub}
-              inputValue={clubQuery}
-              onInputValueChange={(value, details) => {
-                if (
-                  details.reason === 'input-change' ||
-                  details.reason === 'input-clear'
-                ) {
-                  setClubQuery(value);
-                  if (selectedClub && value !== selectedClub.name) {
-                    setSelectedClub(null);
-                    form.setValue('clubId', '', {
-                      shouldDirty: true,
-                      shouldTouch: true,
-                      shouldValidate: true,
-                    });
-                  }
-                }
-              }}
-              onValueChange={(club) => {
-                setSelectedClub(club ?? null);
-                setClubQuery(club?.name ?? '');
-              }}
-              getItemLabel={(club) => club?.name ?? ''}
-              getItemValue={(club) => club?.id ?? ''}
-              placeholder="Search club"
-              showClear
-              loading={clubLoading}
-              emptyMessage="No clubs found"
-              anchor={clubAnchor}
+              placeholder="Search club..."
+              emptyText="No clubs found."
+              ariaInvalid={!!form.formState.errors.clubId}
+              data={clubs}
             />
 
             <SelectField<PlayerSchema, 'GK' | 'DF' | 'MF' | 'CF'>

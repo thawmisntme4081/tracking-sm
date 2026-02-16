@@ -9,7 +9,7 @@ import {
   ChartTooltipContent,
 } from '@/components/ui/chart';
 
-type PlayerValueChartProps = {
+type Props = {
   data: { date: string; value: number }[];
   type?: 'linear' | 'natural' | 'monotone' | 'step';
 };
@@ -21,10 +21,7 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-export function PlayerValueChart({
-  data,
-  type = 'linear',
-}: PlayerValueChartProps) {
+export default function PlayerValueChart({ data, type = 'linear' }: Props) {
   return (
     <Card>
       <CardHeader>

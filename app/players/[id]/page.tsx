@@ -1,62 +1,28 @@
 import { notFound } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from '@/components/ui/drawer';
-import prisma from '@/lib/prisma';
-import { PlayerValueChart } from './player-value-chart';
+import { getClubs } from '@/app/actions/clubs';
+import { getPLayer } from '@/app/actions/players/player';
+import { getPlayerHistories } from '@/app/actions/players/playerHistory';
+import AppDrawer from '@/components/common/AppDrawer';
+import AddTransferForm from './AddTransferForm';
+import PlayerValueChart from './PlayerValueChart';
 import { TransferHistory } from './transfer-history';
 
-type PlayerDetailPageProps = {
+type Props = {
   params: Promise<{ id: string }>;
 };
 
-export default async function PlayerDetailPage({
-  params,
-}: PlayerDetailPageProps) {
+export default async function PlayerDetailPage({ params }: Props) {
   const { id } = await params;
 
-  const player = await prisma.player.findUnique({
-    where: { id },
-    select: {
-      firstName: true,
-      lastName: true,
-      values: {
-        orderBy: { date: 'asc' },
-        select: {
-          date: true,
-          value: true,
-        },
-      },
-    },
-  });
+  const player = await getPLayer(id);
 
   if (!player) {
     notFound();
   }
 
-  const playerHistory = await prisma.playerHistory.findMany({
-    where: { playerId: id },
-    orderBy: { dateJoined: 'desc' },
-    select: {
-      id: true,
-      dateJoined: true,
-      buyValue: true,
-      marketValue: true,
-      club: {
-        select: {
-          name: true,
-        },
-      },
-    },
-  });
+  const clubs = await getClubs();
+
+  const playerHistory = await getPlayerHistories(id);
 
   const valueHistory = player.values.map(({ date, value }) => ({
     date: date.toISOString(),
@@ -69,24 +35,9 @@ export default async function PlayerDetailPage({
         <h1 className="text-2xl font-semibold">
           {player.firstName} {player.lastName.toUpperCase()}
         </h1>
-        <Drawer direction="right">
-          <DrawerTrigger asChild>
-            <Button>Add transfer</Button>
-          </DrawerTrigger>
-          <DrawerContent>
-            <DrawerHeader>
-              <DrawerTitle>Add transfer</DrawerTitle>
-              <DrawerDescription>
-                Transfer form will be added here.
-              </DrawerDescription>
-            </DrawerHeader>
-            <DrawerFooter>
-              <DrawerClose asChild>
-                <Button variant="outline">Close</Button>
-              </DrawerClose>
-            </DrawerFooter>
-          </DrawerContent>
-        </Drawer>
+        <AppDrawer labelBtn="Add transfer" title="Add transfer">
+          <AddTransferForm clubs={clubs} />
+        </AppDrawer>
       </div>
       <div className="grid grid-cols-2 gap-4">
         <TransferHistory data={playerHistory} />

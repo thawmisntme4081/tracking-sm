@@ -1,3 +1,4 @@
+import type { Control, FieldPath, FieldValues } from 'react-hook-form';
 import {
   Combobox,
   ComboboxCollection,
@@ -6,126 +7,82 @@ import {
   ComboboxInput,
   ComboboxItem,
   ComboboxList,
-} from "@/components/ui/combobox";
+} from '@/components/ui/combobox';
 import {
   FormControl,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import type React from "react";
-import {
-  type Control,
-  type FieldPath,
-  type FieldPathValue,
-  type FieldValues,
-} from "react-hook-form";
+} from '@/components/ui/form';
 
-type InputValueChangeDetails = {
-  reason?: string;
+type ComboboxItemOption = {
+  id: string;
+  name: string;
 };
 
-type ComboboxFieldProps<
-  TFieldValues extends FieldValues,
-  TItem,
-  TName extends FieldPath<TFieldValues>,
-> = {
+type ComboboxFieldProps<TFieldValues extends FieldValues> = {
   control: Control<TFieldValues>;
-  name: TName;
+  name: FieldPath<TFieldValues>;
   label: string;
-  items: TItem[];
-  value: TItem | null;
-  inputValue: string;
-  onInputValueChange: (value: string, details: InputValueChangeDetails) => void;
-  onValueChange?: (item: TItem | null) => void;
-  valueToFormValue?: (
-    item: TItem | null,
-  ) => FieldPathValue<TFieldValues, TName>;
-  getItemLabel: (item: TItem | null) => string;
-  getItemValue: (item: TItem | null) => string;
-  renderItem?: (item: TItem) => React.ReactNode;
+  data: ComboboxItemOption[];
   placeholder?: string;
-  showClear?: boolean;
-  loading?: boolean;
-  emptyMessage?: string;
-  loadingMessage?: string;
-  anchor?: React.RefObject<HTMLDivElement | null>;
+  emptyText?: string;
+  ariaInvalid?: boolean;
 };
 
-export default function ComboboxField<
-  TFieldValues extends FieldValues,
-  TItem,
-  TName extends FieldPath<TFieldValues>,
->({
+export default function ComboboxField<TFieldValues extends FieldValues>({
   control,
   name,
   label,
-  items,
-  value,
-  inputValue,
-  onInputValueChange,
-  onValueChange,
-  valueToFormValue,
-  getItemLabel,
-  getItemValue,
-  renderItem,
-  placeholder,
-  showClear = false,
-  loading = false,
-  emptyMessage = "No results found",
-  loadingMessage = "Loading...",
-  anchor,
-}: ComboboxFieldProps<TFieldValues, TItem, TName>) {
-  const emptyLabel = loading ? loadingMessage : emptyMessage;
-  const toFormValue =
-    valueToFormValue ??
-    ((item: TItem | null) =>
-      getItemValue(item) as FieldPathValue<TFieldValues, TName>);
-
+  data,
+  placeholder = 'Search...',
+  emptyText = 'No options found.',
+  ariaInvalid,
+}: ComboboxFieldProps<TFieldValues>) {
   return (
     <FormField
       control={control}
       name={name}
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>{label}</FormLabel>
-          <FormControl>
-            <div ref={anchor} className="w-full">
-              <Combobox
-                items={items}
-                value={value}
-                inputValue={inputValue}
-                itemToStringLabel={getItemLabel}
-                itemToStringValue={getItemValue}
-                onInputValueChange={onInputValueChange}
-                onValueChange={(item) => {
-                  onValueChange?.(item);
-                  field.onChange(toFormValue(item));
-                }}
-              >
-                <ComboboxInput placeholder={placeholder} showClear={showClear} />
-                <ComboboxContent anchor={anchor}>
-                  <ComboboxList>
-                    <ComboboxCollection>
-                      {(item) => (
-                        <ComboboxItem
-                          key={getItemValue(item)}
-                          value={item}
-                        >
-                          {renderItem ? renderItem(item) : getItemLabel(item)}
-                        </ComboboxItem>
-                      )}
-                    </ComboboxCollection>
-                    <ComboboxEmpty>{emptyLabel}</ComboboxEmpty>
-                  </ComboboxList>
-                </ComboboxContent>
-              </Combobox>
-            </div>
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-      )}
+      render={({ field }) => {
+        const selectedItem =
+          data.find((item) => item.id === field.value) ?? null;
+
+        return (
+          <FormItem>
+            <FormLabel>{label}</FormLabel>
+            <Combobox
+              items={data}
+              value={selectedItem}
+              itemToStringLabel={(item) => item.name}
+              itemToStringValue={(item) => item.id}
+              isItemEqualToValue={(item, selected) => item.id === selected.id}
+              onValueChange={(value) => field.onChange(value?.id ?? '')}
+            >
+              <FormControl>
+                <ComboboxInput
+                  placeholder={placeholder}
+                  aria-invalid={ariaInvalid}
+                  showClear
+                />
+              </FormControl>
+              <ComboboxContent>
+                <ComboboxEmpty>{emptyText}</ComboboxEmpty>
+                <ComboboxList>
+                  <ComboboxCollection>
+                    {(item) => (
+                      <ComboboxItem key={item.id} value={item}>
+                        {item.name}
+                      </ComboboxItem>
+                    )}
+                  </ComboboxCollection>
+                </ComboboxList>
+              </ComboboxContent>
+            </Combobox>
+            <FormMessage />
+          </FormItem>
+        );
+      }}
     />
   );
 }
