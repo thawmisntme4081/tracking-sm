@@ -1,6 +1,8 @@
 'use client';
 
 import { Area, AreaChart, CartesianGrid, XAxis } from 'recharts';
+import AppDrawer from '@/components/common/AppDrawer';
+import UpdateValueForm from '@/components/UpdateValue/UpdateValueForm';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   type ChartConfig,
@@ -11,6 +13,7 @@ import {
 
 type Props = {
   data: { date: string; value: number }[];
+  playerId: string;
   type?: 'linear' | 'natural' | 'monotone' | 'step';
 };
 
@@ -21,11 +24,18 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-export default function PlayerValueChart({ data, type = 'linear' }: Props) {
+export default function PlayerValueChart({
+  data,
+  playerId,
+  type = 'linear',
+}: Props) {
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex items-center justify-between">
         <CardTitle>Player Value History</CardTitle>
+        <AppDrawer labelBtn="Update value" title="Update value">
+          <UpdateValueForm playerId={playerId} />
+        </AppDrawer>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig} className="h-70 w-full">
@@ -45,8 +55,9 @@ export default function PlayerValueChart({ data, type = 'linear' }: Props) {
               minTickGap={32}
               tickFormatter={(value) =>
                 new Date(value).toLocaleDateString('en-US', {
-                  month: 'short',
+                  month: '2-digit',
                   year: '2-digit',
+                  timeZone: 'UTC',
                 })
               }
             />
@@ -59,6 +70,7 @@ export default function PlayerValueChart({ data, type = 'linear' }: Props) {
                     new Date(value as string).toLocaleDateString('en-US', {
                       month: 'long',
                       year: 'numeric',
+                      timeZone: 'UTC',
                     })
                   }
                 />

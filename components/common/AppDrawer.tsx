@@ -1,4 +1,12 @@
-import type { ReactNode } from 'react';
+'use client';
+
+import {
+  cloneElement,
+  isValidElement,
+  type ReactElement,
+  type ReactNode,
+  useState,
+} from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Drawer,
@@ -19,8 +27,16 @@ type Props = {
 };
 
 const AppDrawer = ({ title, labelBtn, children, description }: Props) => {
+  const [open, setOpen] = useState(false);
+
+  const content = isValidElement(children)
+    ? cloneElement(children as ReactElement<{ onCloseDrawer?: () => void }>, {
+        onCloseDrawer: () => setOpen(false),
+      })
+    : children;
+
   return (
-    <Drawer direction="right">
+    <Drawer direction="right" modal={false} open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>
         <Button>{labelBtn}</Button>
       </DrawerTrigger>
@@ -29,7 +45,7 @@ const AppDrawer = ({ title, labelBtn, children, description }: Props) => {
           <DrawerTitle>{title}</DrawerTitle>
           {description && <DrawerDescription>{description}</DrawerDescription>}
         </DrawerHeader>
-        {children}
+        {content}
         <DrawerFooter>
           <DrawerClose asChild>
             <Button variant="outline">Close</Button>

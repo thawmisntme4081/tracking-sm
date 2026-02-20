@@ -27,7 +27,7 @@ function formatDate(date: Date | null) {
     return '-';
   }
 
-  return date.toLocaleDateString('en-GB');
+  return date.toLocaleDateString('en-GB', { timeZone: 'UTC' });
 }
 
 function formatMoney(value: number | null) {
@@ -42,7 +42,7 @@ export function TransferHistory({ data }: TransferHistoryProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Player History</CardTitle>
+        <CardTitle>Player Transfer History</CardTitle>
       </CardHeader>
       <CardContent className="space-y-2 text-sm">
         {data.length === 0 ? (
@@ -60,7 +60,7 @@ export function TransferHistory({ data }: TransferHistoryProps) {
             </TableHeader>
             <TableBody>
               {data.map((history, index) => {
-                const previousHistory = data[index - 1];
+                const previousHistory = data[index + 1];
                 const leftClub = previousHistory?.club?.name ?? '-';
                 const joinedClub = history.club?.name ?? '-';
 

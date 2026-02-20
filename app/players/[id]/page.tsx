@@ -3,7 +3,7 @@ import { getClubs } from '@/app/actions/clubs';
 import { getPLayer } from '@/app/actions/players/player';
 import { getPlayerHistories } from '@/app/actions/players/playerHistory';
 import AppDrawer from '@/components/common/AppDrawer';
-import AddTransferForm from './AddTransferForm';
+import AddTransferForm from '../../../components/AddTransfer/AddTransferForm';
 import PlayerValueChart from './PlayerValueChart';
 import { TransferHistory } from './transfer-history';
 
@@ -27,7 +27,7 @@ export default async function PlayerDetailPage({ params }: Props) {
   const valueHistory = player.values.map(({ date, value }) => ({
     date: date.toISOString(),
     value,
-  }));
+  }));  
 
   return (
     <section className="space-y-6">
@@ -36,12 +36,12 @@ export default async function PlayerDetailPage({ params }: Props) {
           {player.firstName} {player.lastName.toUpperCase()}
         </h1>
         <AppDrawer labelBtn="Add transfer" title="Add transfer">
-          <AddTransferForm clubs={clubs} />
+          <AddTransferForm playerId={id} clubs={clubs} />
         </AppDrawer>
       </div>
       <div className="grid grid-cols-2 gap-4">
         <TransferHistory data={playerHistory} />
-        <PlayerValueChart data={valueHistory} type="linear" />
+        <PlayerValueChart data={valueHistory} playerId={id} type="linear" />
       </div>
     </section>
   );
