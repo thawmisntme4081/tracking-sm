@@ -9,6 +9,7 @@ export const getPlayerHistories = async (playerId: string) => {
       dateJoined: true,
       buyValue: true,
       marketValue: true,
+      onLoan: true,
       club: {
         select: {
           name: true,

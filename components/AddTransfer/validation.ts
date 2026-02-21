@@ -7,7 +7,7 @@ export const transferMarketValueSchema = z
   .number({ invalid_type_error: 'Market value is required' })
   .min(0, 'Market value must be 0 or higher');
 
-export const transferSchema = z.object({
+export const transferBaseSchema = z.object({
   date: transferDateSchema,
   clubId: z.preprocess((value) => {
     if (typeof value !== 'string') {
@@ -15,11 +15,20 @@ export const transferSchema = z.object({
     }
     const trimmed = value.trim();
     return trimmed.length === 0 ? undefined : trimmed;
-  }, z.string().uuid('Club must be a valid UUID')),
+  }, z.string().uuid('Club must be a valid UUID').optional()),
   marketValue: transferMarketValueSchema,
-  fee: z
-    .number({ invalid_type_error: 'Fee is required' })
-    .min(0, 'Fee must be 0 or higher'),
+  onLoan: z.date().optional(),
+  fee: z.number().min(0, 'Fee must be 0 or higher').optional(),
+});
+
+export const transferSchema = transferBaseSchema.superRefine((values, ctx) => {
+  if (values.onLoan && values.fee !== undefined) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Use either Loan Until or Fee, not both',
+      path: ['onLoan'],
+    });
+  }
 });
 
 export type TransferSchema = z.infer<typeof transferSchema>;

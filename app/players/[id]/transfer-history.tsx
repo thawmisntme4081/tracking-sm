@@ -13,6 +13,7 @@ type TransferHistoryItem = {
   dateJoined: Date | null;
   buyValue: number | null;
   marketValue: number | null;
+  onLoan: Date | null;
   club: {
     name: string;
   } | null;
@@ -70,7 +71,7 @@ export function TransferHistory({ data }: TransferHistoryProps) {
                     <TableCell>{leftClub}</TableCell>
                     <TableCell>{joinedClub}</TableCell>
                     <TableCell>{formatMoney(history.marketValue)}</TableCell>
-                    <TableCell>{formatMoney(history.buyValue)}</TableCell>
+                    <TableCell>{history.onLoan ? `On loan until ${formatDate(history.onLoan)}` : formatMoney(history.buyValue)}</TableCell>
                   </TableRow>
                 );
               })}

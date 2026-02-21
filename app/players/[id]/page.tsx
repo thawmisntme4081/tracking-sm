@@ -27,7 +27,7 @@ export default async function PlayerDetailPage({ params }: Props) {
   const valueHistory = player.values.map(({ date, value }) => ({
     date: date.toISOString(),
     value,
-  }));  
+  }));
 
   return (
     <section className="space-y-6">

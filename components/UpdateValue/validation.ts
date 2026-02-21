@@ -1,7 +1,7 @@
 import type { z } from 'zod';
-import { transferSchema } from '@/components/AddTransfer/validation';
+import { transferBaseSchema } from '@/components/AddTransfer/validation';
 
-export const updateValueSchema = transferSchema.pick({
+export const updateValueSchema = transferBaseSchema.pick({
   date: true,
   marketValue: true,
 });

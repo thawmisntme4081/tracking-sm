@@ -18,6 +18,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
 import {
   Popover,
   PopoverContent,
@@ -38,6 +39,7 @@ const AddTransferForm = ({ playerId, clubs, onCloseDrawer }: Props) => {
     date: undefined,
     clubId: '',
     marketValue: undefined,
+    onLoan: undefined,
     fee: undefined,
   };
 
@@ -63,7 +65,8 @@ const AddTransferForm = ({ playerId, clubs, onCloseDrawer }: Props) => {
     resetForm();
   });
 
-  // Todo: loan
+  const onLoan = form.watch('onLoan');
+  const fee = form.watch('fee');
 
   return (
     <Form {...form}>
@@ -125,13 +128,83 @@ const AddTransferForm = ({ playerId, clubs, onCloseDrawer }: Props) => {
             parseNumber
           />
 
-          <InputField<TransferSchema>
-            control={form.control}
-            name="fee"
-            label="Fee"
-            type="number"
-            parseNumber
-          />
+          {fee === undefined && (
+            <FormField
+              control={form.control}
+              name="onLoan"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Loan Until</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className={cn(
+                            'w-full justify-start text-left font-normal',
+                            !field.value && 'text-muted-foreground',
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {field.value
+                            ? format(field.value, 'PPP')
+                            : 'Pick a date'}
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={(value) => {
+                          field.onChange(value);
+                          if (value) {
+                            form.setValue('fee', undefined, {
+                              shouldValidate: true,
+                            });
+                          }
+                        }}
+                        autoFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+
+          {!onLoan && (
+            <FormField
+              control={form.control}
+              name="fee"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Fee</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      value={field.value ?? ''}
+                      onChange={(event) => {
+                        const value =
+                          event.target.value === ''
+                            ? undefined
+                            : Number(event.target.value);
+                        field.onChange(value);
+                        if (value !== undefined) {
+                          form.setValue('onLoan', undefined, {
+                            shouldValidate: true,
+                          });
+                        }
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
         </div>
 
         <div className="p-4 flex gap-3">

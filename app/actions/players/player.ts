@@ -12,9 +12,11 @@ import {
 } from '@/components/UpdateValue/validation';
 import prisma from '@/lib/prisma';
 
-const updateTransferSchema = transferSchema.extend({
-  playerId: z.string().uuid('Player must be a valid UUID'),
-});
+const updateTransferSchema = z
+  .object({
+    playerId: z.string().uuid('Player must be a valid UUID'),
+  })
+  .and(transferSchema);
 const createPlayerValueSchema = updateValueSchema.extend({
   playerId: z.string().uuid('Player must be a valid UUID'),
 });
@@ -38,10 +40,15 @@ export const getPLayer = async (id: string) => {
 
 export async function updateTransfer(rawValues: TransferValidate) {
   const values = updateTransferSchema.parse(rawValues);
-  const { playerId, date, clubId, marketValue, fee } = values;
+  const { playerId, date, clubId, marketValue, onLoan, fee } = values;
   const utcDate = new Date(
     Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()),
   );
+  const utcOnLoanDate = onLoan
+    ? new Date(
+        Date.UTC(onLoan.getFullYear(), onLoan.getMonth(), onLoan.getDate()),
+      )
+    : undefined;
 
   try {
     await prisma.$transaction([
@@ -50,6 +57,7 @@ export async function updateTransfer(rawValues: TransferValidate) {
           playerId,
           clubId,
           dateJoined: utcDate,
+          onLoan: utcOnLoanDate,
           marketValue,
           buyValue: fee,
         },
