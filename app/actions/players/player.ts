@@ -40,7 +40,7 @@ export const getPLayer = async (id: string) => {
 
 export async function updateTransfer(rawValues: TransferValidate) {
   const values = updateTransferSchema.parse(rawValues);
-  const { playerId, date, clubId, marketValue, onLoan, fee } = values;
+  const { playerId, date, clubId, marketValue, onLoan, fee, type } = values;
   const utcDate = new Date(
     Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()),
   );
@@ -51,25 +51,74 @@ export async function updateTransfer(rawValues: TransferValidate) {
     : undefined;
 
   try {
-    await prisma.$transaction([
-      prisma.playerHistory.create({
+    await prisma.$transaction(async (tx) => {
+      const [player, destinationClub] = await Promise.all([
+        tx.player.findUnique({
+          where: { id: playerId },
+          select: { id: true },
+        }),
+        tx.club.findUnique({
+          where: { id: clubId },
+          select: { id: true },
+        }),
+      ]);
+
+      if (!player) {
+        throw new Error('Player not found');
+      }
+
+      if (!destinationClub) {
+        throw new Error('Destination club not found');
+      }
+
+      const latestTransfer = await tx.playerHistory.findFirst({
+        where: {
+          playerId,
+          eventDate: {
+            lte: utcDate,
+          },
+        },
+        orderBy: [{ eventDate: 'desc' }],
+        select: {
+          type: true,
+          loanParentId: true,
+          fromClubId: true,
+        },
+      });
+
+      const resolvedFromClubId =
+        latestTransfer?.type === 'LOAN'
+          ? (latestTransfer.loanParentId ?? null)
+          : (latestTransfer?.fromClubId ?? null);
+
+      if (resolvedFromClubId && resolvedFromClubId === clubId) {
+        throw new Error('Destination club cannot be the same as source club');
+      }
+
+      const loanParentId = type === 'LOAN' ? resolvedFromClubId : null;
+
+      await tx.playerHistory.create({
         data: {
           playerId,
-          clubId,
-          dateJoined: utcDate,
-          onLoan: utcOnLoanDate,
+          type,
+          eventDate: utcDate,
+          fromClubId: resolvedFromClubId,
+          toClubId: clubId,
+          loanParentId,
+          loanEndAt: type === 'LOAN' ? utcOnLoanDate : null,
+          fee: type === 'TRANSFER' ? fee : null,
           marketValue,
-          buyValue: fee,
         },
-      }),
-      prisma.playerValue.create({
+      });
+
+      await tx.playerValue.create({
         data: {
           playerId,
           date: utcDate,
           value: marketValue,
         },
-      }),
-    ]);
+      });
+    });
 
     revalidatePath(`/players/${playerId}`);
 

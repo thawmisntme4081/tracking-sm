@@ -3,18 +3,29 @@ import prisma from '@/lib/prisma';
 export const getPlayerHistories = async (playerId: string) => {
   return await prisma.playerHistory.findMany({
     where: { playerId },
-    orderBy: { dateJoined: 'desc' },
+    orderBy: { eventDate: 'desc' },
     select: {
       id: true,
-      dateJoined: true,
-      buyValue: true,
+      type: true,
+      eventDate: true,
+      fee: true,
       marketValue: true,
-      onLoan: true,
-      club: {
+      fromClub: {
         select: {
           name: true,
         },
       },
+      toClub: {
+        select: {
+          name: true,
+        },
+      },
+      loanParent: {
+        select: {
+          name: true,
+        },
+      },
+      loanEndAt: true,
     },
   });
 };

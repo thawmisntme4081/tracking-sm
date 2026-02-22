@@ -7,14 +7,22 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { formatDate, formatMoney } from '@/lib/format';
 
 type TransferHistoryItem = {
   id: string;
-  dateJoined: Date | null;
-  buyValue: number | null;
+  type: 'TRANSFER' | 'LOAN' | null;
   marketValue: number | null;
-  onLoan: Date | null;
-  club: {
+  eventDate: Date | null;
+  loanEndAt: Date | null;
+  fee: number | null;
+  loanParent: {
+    name: string;
+  } | null;
+  fromClub: {
+    name: string;
+  } | null;
+  toClub: {
     name: string;
   } | null;
 };
@@ -23,20 +31,12 @@ type TransferHistoryProps = {
   data: TransferHistoryItem[];
 };
 
-function formatDate(date: Date | null) {
-  if (!date) {
-    return '-';
+function formatFeeOrLoan(history: TransferHistoryItem) {
+  if (history.type === 'LOAN' || history.loanEndAt) {
+    return `On loan until ${formatDate(history.loanEndAt)}`;
   }
 
-  return date.toLocaleDateString('en-GB', { timeZone: 'UTC' });
-}
-
-function formatMoney(value: number | null) {
-  if (value === null || value === undefined) {
-    return '-';
-  }
-
-  return value.toLocaleString();
+  return formatMoney(history.fee);
 }
 
 export function TransferHistory({ data }: TransferHistoryProps) {
@@ -61,17 +61,25 @@ export function TransferHistory({ data }: TransferHistoryProps) {
             </TableHeader>
             <TableBody>
               {data.map((history, index) => {
-                const previousHistory = data[index + 1];
-                const leftClub = previousHistory?.club?.name ?? '-';
-                const joinedClub = history.club?.name ?? '-';
+                const fromClub = history.fromClub?.name
+                  ? history.fromClub.name
+                  : history.toClub?.name && index !== data.length - 1
+                    ? 'Without Club'
+                    : '-';
+
+                const toClub = history.toClub?.name
+                  ? history.toClub.name
+                  : history.fromClub?.name && index !== data.length - 1
+                    ? 'Without Club'
+                    : '-';
 
                 return (
                   <TableRow key={history.id}>
-                    <TableCell>{formatDate(history.dateJoined)}</TableCell>
-                    <TableCell>{leftClub}</TableCell>
-                    <TableCell>{joinedClub}</TableCell>
+                    <TableCell>{formatDate(history.eventDate)}</TableCell>
+                    <TableCell>{fromClub}</TableCell>
+                    <TableCell>{toClub}</TableCell>
                     <TableCell>{formatMoney(history.marketValue)}</TableCell>
-                    <TableCell>{history.onLoan ? `On loan until ${formatDate(history.onLoan)}` : formatMoney(history.buyValue)}</TableCell>
+                    <TableCell>{formatFeeOrLoan(history)}</TableCell>
                   </TableRow>
                 );
               })}

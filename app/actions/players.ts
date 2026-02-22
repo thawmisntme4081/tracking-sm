@@ -149,10 +149,10 @@ export async function getPlayersForTable() {
       position: true,
       isRetired: true,
       histories: {
-        orderBy: { dateJoined: 'desc' },
+        orderBy: { eventDate: 'desc' },
         take: 1,
         select: {
-          club: {
+          toClub: {
             select: {
               id: true,
               name: true,

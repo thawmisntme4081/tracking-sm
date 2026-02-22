@@ -3,11 +3,13 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { updateTransfer } from '@/app/actions/players/player';
 import ComboboxField from '@/components/common/ComboboxField';
 import InputField from '@/components/common/InputField';
+import SelectField from '@/components/common/SelectField';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import {
@@ -36,6 +38,7 @@ type Props = {
 
 const AddTransferForm = ({ playerId, clubs, onCloseDrawer }: Props) => {
   const defaultValues: Partial<TransferSchema> = {
+    type: 'TRANSFER',
     date: undefined,
     clubId: '',
     marketValue: undefined,
@@ -65,13 +68,33 @@ const AddTransferForm = ({ playerId, clubs, onCloseDrawer }: Props) => {
     resetForm();
   });
 
-  const onLoan = form.watch('onLoan');
-  const fee = form.watch('fee');
+  const transferType = form.watch('type');
+
+  useEffect(() => {
+    if (transferType === 'LOAN') {
+      form.setValue('fee', undefined, { shouldValidate: true });
+      return;
+    }
+
+    form.setValue('onLoan', undefined, { shouldValidate: true });
+  }, [form, transferType]);
 
   return (
     <Form {...form}>
       <form onSubmit={onSubmit}>
         <div className="grid gap-4 p-4">
+          <SelectField<TransferSchema, 'TRANSFER' | 'LOAN'>
+            control={form.control}
+            name="type"
+            label="Type"
+            placeholder="Select transfer type"
+            ariaInvalid={!!form.formState.errors.type}
+            options={[
+              { value: 'TRANSFER', label: 'Permanent Transfer' },
+              { value: 'LOAN', label: 'Loan Transfer' },
+            ]}
+          />
+
           <FormField
             control={form.control}
             name="date"
@@ -128,7 +151,7 @@ const AddTransferForm = ({ playerId, clubs, onCloseDrawer }: Props) => {
             parseNumber
           />
 
-          {fee === undefined && (
+          {transferType === 'LOAN' && (
             <FormField
               control={form.control}
               name="onLoan"
@@ -157,14 +180,7 @@ const AddTransferForm = ({ playerId, clubs, onCloseDrawer }: Props) => {
                       <Calendar
                         mode="single"
                         selected={field.value}
-                        onSelect={(value) => {
-                          field.onChange(value);
-                          if (value) {
-                            form.setValue('fee', undefined, {
-                              shouldValidate: true,
-                            });
-                          }
-                        }}
+                        onSelect={field.onChange}
                         autoFocus
                       />
                     </PopoverContent>
@@ -175,7 +191,7 @@ const AddTransferForm = ({ playerId, clubs, onCloseDrawer }: Props) => {
             />
           )}
 
-          {!onLoan && (
+          {transferType === 'TRANSFER' && (
             <FormField
               control={form.control}
               name="fee"
@@ -192,11 +208,6 @@ const AddTransferForm = ({ playerId, clubs, onCloseDrawer }: Props) => {
                             ? undefined
                             : Number(event.target.value);
                         field.onChange(value);
-                        if (value !== undefined) {
-                          form.setValue('onLoan', undefined, {
-                            shouldValidate: true,
-                          });
-                        }
                       }}
                     />
                   </FormControl>

@@ -2,8 +2,8 @@ import { notFound } from 'next/navigation';
 import { getClubs } from '@/app/actions/clubs';
 import { getPLayer } from '@/app/actions/players/player';
 import { getPlayerHistories } from '@/app/actions/players/playerHistory';
+import AddTransferForm from '@/components/AddTransfer/AddTransferForm';
 import AppDrawer from '@/components/common/AppDrawer';
-import AddTransferForm from '../../../components/AddTransfer/AddTransferForm';
 import PlayerValueChart from './PlayerValueChart';
 import { TransferHistory } from './transfer-history';
 

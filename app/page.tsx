@@ -1,7 +1,7 @@
-import { getPlayersForTable } from "@/app/actions/players";
+import { getPlayersForTable } from '@/app/actions/players';
 import PlayersTable, {
   type PlayerRow,
-} from "@/components/players/PlayersTable";
+} from '@/components/players/PlayersTable';
 
 export default async function Home() {
   const players = await getPlayersForTable();
@@ -12,16 +12,16 @@ export default async function Home() {
     lastName: player.lastName,
     yearOfBirth: player.yearOfBirth,
     position: player.position,
-    club: player.histories[0]?.club?.name ?? null,
+    club: player.histories[0]?.toClub?.name ?? null,
     currentValue: player.values[0]?.value ?? null,
   }));
 
   return (
-    <div className="space-y-6">
+    <section className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold">Players</h1>
       </div>
       <PlayersTable data={data} />
-    </div>
+    </section>
   );
 }
