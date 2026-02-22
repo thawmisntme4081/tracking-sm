@@ -1,6 +1,9 @@
 -- CreateEnum
 CREATE TYPE "Position" AS ENUM ('GK', 'DF', 'MF', 'CF');
 
+-- CreateEnum
+CREATE TYPE "HistoryType" AS ENUM ('TRANSFER', 'LOAN');
+
 -- CreateTable
 CREATE TABLE "Player" (
     "id" UUID NOT NULL DEFAULT gen_random_uuid(),
@@ -27,10 +30,13 @@ CREATE TABLE "Club" (
 CREATE TABLE "PlayerHistory" (
     "id" UUID NOT NULL DEFAULT gen_random_uuid(),
     "playerId" UUID NOT NULL,
-    "clubId" UUID,
-    "dateJoined" TIMESTAMP(3) DEFAULT '2025-07-01 00:00:00'::timestamp without time zone,
-    "buyValue" INTEGER,
-    "marketValue" INTEGER,
+    "type" "HistoryType",
+    "eventDate" TIMESTAMP(3),
+    "fromClubId" UUID,
+    "toClubId" UUID,
+    "loanParentId" UUID,
+    "loanEndAt" TIMESTAMP(3),
+    "fee" INTEGER,
 
     CONSTRAINT "PlayerHistory_pkey" PRIMARY KEY ("id")
 );
@@ -45,11 +51,20 @@ CREATE TABLE "PlayerValue" (
     CONSTRAINT "PlayerValue_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateIndex
+CREATE INDEX "PlayerHistory_playerId_eventDate_idx" ON "PlayerHistory"("playerId", "eventDate");
+
 -- AddForeignKey
-ALTER TABLE "PlayerHistory" ADD CONSTRAINT "PlayerHistory_clubId_fkey" FOREIGN KEY ("clubId") REFERENCES "Club"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "PlayerHistory" ADD CONSTRAINT "PlayerHistory_fromClubId_fkey" FOREIGN KEY ("fromClubId") REFERENCES "Club"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "PlayerHistory" ADD CONSTRAINT "PlayerHistory_loanParentId_fkey" FOREIGN KEY ("loanParentId") REFERENCES "Club"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "PlayerHistory" ADD CONSTRAINT "PlayerHistory_playerId_fkey" FOREIGN KEY ("playerId") REFERENCES "Player"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "PlayerHistory" ADD CONSTRAINT "PlayerHistory_toClubId_fkey" FOREIGN KEY ("toClubId") REFERENCES "Club"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "PlayerValue" ADD CONSTRAINT "PlayerValue_playerId_fkey" FOREIGN KEY ("playerId") REFERENCES "Player"("id") ON DELETE CASCADE ON UPDATE CASCADE;

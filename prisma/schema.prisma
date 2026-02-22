@@ -21,21 +21,31 @@ model Player {
 }
 
 model Club {
-  id        String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name      String
-  histories PlayerHistory[]
+  id              String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name            String
+  historiesFrom   PlayerHistory[] @relation("HistoryFromClub")
+  historiesTo     PlayerHistory[] @relation("HistoryToClub")
+  historiesParent PlayerHistory[] @relation("HistoryParentClub")
 }
 
 model PlayerHistory {
-  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  playerId    String    @db.Uuid
-  clubId      String?   @db.Uuid
-  dateJoined  DateTime? @default(dbgenerated("'2025-07-01 00:00:00'::timestamp without time zone"))
-  onLoan      DateTime?  
-  buyValue    Int?      
+  id       String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  playerId String @db.Uuid
   marketValue Int?
-  club        Club?     @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  player      Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  type         HistoryType?
+  eventDate    DateTime?
+  fromClubId   String?      @db.Uuid
+  toClubId     String?      @db.Uuid
+  loanParentId String?      @db.Uuid
+  loanEndAt    DateTime?
+  fee          Int?
+
+  fromClub   Club?  @relation("HistoryFromClub", fields: [fromClubId], references: [id], onDelete: SetNull)
+  loanParent Club?  @relation("HistoryParentClub", fields: [loanParentId], references: [id], onDelete: SetNull)
+  player     Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  toClub     Club?  @relation("HistoryToClub", fields: [toClubId], references: [id], onDelete: SetNull)
+
+  @@index([playerId, eventDate])
 }
 
 model PlayerValue {
@@ -51,4 +61,9 @@ enum Position {
   DF
   MF
   CF
+}
+
+enum HistoryType {
+  TRANSFER
+  LOAN
 }
