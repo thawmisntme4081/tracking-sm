@@ -35,13 +35,22 @@ export default async function PlayerDetailPage({ params }: Props) {
         <h1 className="text-2xl font-semibold">
           {player.firstName} {player.lastName.toUpperCase()}
         </h1>
-        <AppDrawer labelBtn="Add transfer" title="Add transfer">
+        <AppDrawer
+          labelBtn="Add transfer"
+          title="Add transfer"
+          disabled={player.isRetired}
+        >
           <AddTransferForm playerId={id} clubs={clubs} />
         </AppDrawer>
       </div>
       <div className="grid grid-cols-2 gap-4">
         <TransferHistory data={playerHistory} />
-        <PlayerValueChart data={valueHistory} playerId={id} type="linear" />
+        <PlayerValueChart
+          data={valueHistory}
+          playerId={id}
+          type="linear"
+          actionDisabled={player.isRetired}
+        />
       </div>
     </section>
   );

@@ -27,6 +27,7 @@ export const getPLayer = async (id: string) => {
     select: {
       firstName: true,
       lastName: true,
+      isRetired: true,
       values: {
         orderBy: { date: 'asc' },
         select: {

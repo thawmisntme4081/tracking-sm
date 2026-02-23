@@ -24,9 +24,16 @@ type Props = {
   labelBtn: string;
   children: ReactNode;
   description?: string;
+  disabled?: boolean;
 };
 
-const AppDrawer = ({ title, labelBtn, children, description }: Props) => {
+const AppDrawer = ({
+  title,
+  labelBtn,
+  children,
+  description,
+  disabled,
+}: Props) => {
   const [open, setOpen] = useState(false);
 
   const content = isValidElement(children)
@@ -34,6 +41,10 @@ const AppDrawer = ({ title, labelBtn, children, description }: Props) => {
         onCloseDrawer: () => setOpen(false),
       })
     : children;
+
+  if (disabled) {
+    return null;
+  }
 
   return (
     <Drawer direction="right" modal={false} open={open} onOpenChange={setOpen}>

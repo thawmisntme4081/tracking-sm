@@ -15,6 +15,7 @@ type Props = {
   data: { date: string; value: number }[];
   playerId: string;
   type?: 'linear' | 'natural' | 'monotone' | 'step';
+  actionDisabled?: boolean;
 };
 
 const chartConfig = {
@@ -28,12 +29,17 @@ export default function PlayerValueChart({
   data,
   playerId,
   type = 'linear',
+  actionDisabled,
 }: Props) {
   return (
     <Card>
       <CardHeader className="flex items-center justify-between">
         <CardTitle>Player Value History</CardTitle>
-        <AppDrawer labelBtn="Update value" title="Update value">
+        <AppDrawer
+          labelBtn="Update value"
+          title="Update value"
+          disabled={actionDisabled}
+        >
           <UpdateValueForm playerId={playerId} />
         </AppDrawer>
       </CardHeader>
