@@ -13,18 +13,13 @@ export const transferMarketValueSchema = z
 export const transferBaseSchema = z.object({
   type: transferTypeSchema,
   date: transferDateSchema,
-  clubId: z.preprocess(
-    (value) => {
-      if (typeof value !== 'string') {
-        return value;
-      }
-      const trimmed = value.trim();
-      return trimmed.length === 0 ? undefined : trimmed;
-    },
-    z
-      .string({ required_error: 'Club is required' })
-      .uuid('Club must be a valid UUID'),
-  ),
+  clubId: z.preprocess((value) => {
+    if (typeof value !== 'string') {
+      return value;
+    }
+    const trimmed = value.trim();
+    return trimmed.length === 0 ? undefined : trimmed;
+  }, z.string().uuid('Club must be a valid UUID').optional()),
   marketValue: transferMarketValueSchema,
   onLoan: z.date().optional(),
   fee: z.number().min(0, 'Fee must be 0 or higher').optional(),
@@ -62,6 +57,14 @@ export const transferSchema = transferBaseSchema.superRefine((values, ctx) => {
       code: z.ZodIssueCode.custom,
       message: 'Loan end date is not allowed for permanent transfer',
       path: ['onLoan'],
+    });
+  }
+
+  if (values.type === 'LOAN' && !values.clubId) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Club is required for loan transfer',
+      path: ['clubId'],
     });
   }
 });

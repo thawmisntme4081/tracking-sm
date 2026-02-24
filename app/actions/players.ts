@@ -12,7 +12,7 @@ export async function savePlayer(values: PlayerSchema) {
     values;
 
   try {
-    const dateJoined = new Date(INIT_DATE);
+    const eventDate = new Date(INIT_DATE);
     await prisma.player.create({
       data: {
         firstName,
@@ -31,8 +31,8 @@ export async function savePlayer(values: PlayerSchema) {
           : {}),
         histories: {
           create: {
-            clubId: clubId?.trim() ?? null,
-            dateJoined,
+            toClubId: clubId?.trim() ?? null,
+            eventDate,
             marketValue: currentValue,
           },
         },
@@ -100,7 +100,7 @@ export async function importPlayersFromCsv(
     }
 
     try {
-      const dateJoined = new Date(INIT_DATE);
+      const eventDate = new Date(INIT_DATE);
       await prisma.player.create({
         data: {
           firstName,
@@ -110,13 +110,13 @@ export async function importPlayersFromCsv(
           values: {
             create: {
               value,
-              date: dateJoined,
+              date: eventDate,
             },
           },
           histories: {
             create: {
-              clubId: clubId ?? null,
-              dateJoined,
+              toClubId: clubId ?? null,
+              eventDate,
               marketValue: value,
             },
           },

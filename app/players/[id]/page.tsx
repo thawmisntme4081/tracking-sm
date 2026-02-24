@@ -1,11 +1,11 @@
 import { notFound } from 'next/navigation';
 import { getClubs } from '@/app/actions/clubs';
-import { getPLayer } from '@/app/actions/players/player';
-import { getPlayerHistories } from '@/app/actions/players/playerHistory';
+import { getPLayer } from '@/app/actions/playerDetail/player';
+import { getPlayerHistories } from '@/app/actions/playerDetail/playerHistory';
 import AddTransferForm from '@/components/AddTransfer/AddTransferForm';
 import AppDrawer from '@/components/common/AppDrawer';
 import PlayerValueChart from './PlayerValueChart';
-import { TransferHistory } from './transfer-history';
+import TransferHistory from './TransferHistory';
 
 type Props = {
   params: Promise<{ id: string }>;

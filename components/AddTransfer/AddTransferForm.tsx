@@ -6,7 +6,7 @@ import { CalendarIcon } from 'lucide-react';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
-import { updateTransfer } from '@/app/actions/players/player';
+import { updateTransfer } from '@/app/actions/playerDetail/player';
 import ComboboxField from '@/components/common/ComboboxField';
 import InputField from '@/components/common/InputField';
 import SelectField from '@/components/common/SelectField';

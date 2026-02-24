@@ -11,5 +11,9 @@ export function formatMoney(value: number | null) {
     return '-';
   }
 
+  if (value === 0) {
+    return 'Free transfer';
+  }
+
   return value.toLocaleString();
 }

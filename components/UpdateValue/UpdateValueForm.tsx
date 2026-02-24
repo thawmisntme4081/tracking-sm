@@ -5,7 +5,7 @@ import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
-import { createPlayerValue } from '@/app/actions/players/player';
+import { createPlayerValue } from '@/app/actions/playerDetail/player';
 import InputField from '@/components/common/InputField';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';

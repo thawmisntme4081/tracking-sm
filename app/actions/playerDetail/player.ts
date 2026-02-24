@@ -53,22 +53,23 @@ export async function updateTransfer(rawValues: TransferValidate) {
 
   try {
     await prisma.$transaction(async (tx) => {
-      const [player, destinationClub] = await Promise.all([
-        tx.player.findUnique({
-          where: { id: playerId },
-          select: { id: true },
-        }),
-        tx.club.findUnique({
-          where: { id: clubId },
-          select: { id: true },
-        }),
-      ]);
+      const player = await tx.player.findUnique({
+        where: { id: playerId },
+        select: { id: true },
+      });
+
+      const destinationClub = clubId
+        ? await tx.club.findUnique({
+            where: { id: clubId },
+            select: { id: true },
+          })
+        : null;
 
       if (!player) {
         throw new Error('Player not found');
       }
 
-      if (!destinationClub) {
+      if (clubId && !destinationClub) {
         throw new Error('Destination club not found');
       }
 
@@ -83,16 +84,16 @@ export async function updateTransfer(rawValues: TransferValidate) {
         select: {
           type: true,
           loanParentId: true,
-          fromClubId: true,
+          toClubId: true,
         },
       });
 
       const resolvedFromClubId =
         latestTransfer?.type === 'LOAN'
           ? (latestTransfer.loanParentId ?? null)
-          : (latestTransfer?.fromClubId ?? null);
+          : (latestTransfer?.toClubId ?? null);
 
-      if (resolvedFromClubId && resolvedFromClubId === clubId) {
+      if (clubId && resolvedFromClubId && resolvedFromClubId === clubId) {
         throw new Error('Destination club cannot be the same as source club');
       }
 
@@ -104,7 +105,7 @@ export async function updateTransfer(rawValues: TransferValidate) {
           type,
           eventDate: utcDate,
           fromClubId: resolvedFromClubId,
-          toClubId: clubId,
+          toClubId: clubId ?? null,
           loanParentId,
           loanEndAt: type === 'LOAN' ? utcOnLoanDate : null,
           fee: type === 'TRANSFER' ? fee : null,

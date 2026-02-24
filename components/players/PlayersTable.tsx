@@ -13,6 +13,7 @@ export type PlayerRow = {
   position: 'GK' | 'DF' | 'MF' | 'CF';
   club: string | null;
   currentValue: number | null;
+  isRetired: boolean;
 };
 
 const columns: ColumnDef<PlayerRow>[] = [

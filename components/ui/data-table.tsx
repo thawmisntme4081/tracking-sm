@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import {
   type ColumnDef,
@@ -8,14 +8,15 @@ import {
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
+  type PaginationState,
   type SortingState,
   useReactTable,
-} from "@tanstack/react-table";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+} from '@tanstack/react-table';
+import Link from 'next/link';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   Table,
   TableBody,
@@ -23,7 +24,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from '@/components/ui/table';
 
 type DataTableProps<TData, TValue> = {
   columns: ColumnDef<TData, TValue>[];
@@ -37,13 +38,52 @@ export function DataTable<TData, TValue>({
   columns,
   data,
   filterKey,
-  filterPlaceholder = "Filter...",
+  filterPlaceholder = 'Filter...',
   getRowHref,
 }: DataTableProps<TData, TValue>) {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [globalFilter, setGlobalFilter] = useState("");
+  const [globalFilter, setGlobalFilter] = useState('');
+  const [pagination, setPagination] = useState<PaginationState>(() => {
+    const page = Number(searchParams.get('page') ?? '1');
+    const pageNumber = Number.isFinite(page) && page > 0 ? Math.floor(page) : 1;
+
+    return {
+      pageIndex: pageNumber - 1,
+      pageSize: 10,
+    };
+  });
+
+  useEffect(() => {
+    const page = Number(searchParams.get('page') ?? '1');
+    const pageNumber = Number.isFinite(page) && page > 0 ? Math.floor(page) : 1;
+    const nextPageIndex = pageNumber - 1;
+
+    setPagination((prev) =>
+      prev.pageIndex === nextPageIndex
+        ? prev
+        : {
+            ...prev,
+            pageIndex: nextPageIndex,
+          },
+    );
+  }, [searchParams]);
+
+  const setPageQuery = (pageNumber: number) => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    if (pageNumber <= 1) {
+      params.delete('page');
+    } else {
+      params.set('page', String(pageNumber));
+    }
+
+    const query = params.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname);
+  };
 
   const table = useReactTable({
     data,
@@ -55,13 +95,12 @@ export function DataTable<TData, TValue>({
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onGlobalFilterChange: setGlobalFilter,
+    onPaginationChange: setPagination,
     state: {
       sorting,
       columnFilters,
       globalFilter,
-    },
-    initialState: {
-      pagination: { pageSize: 10 },
+      pagination,
     },
   });
 
@@ -72,7 +111,7 @@ export function DataTable<TData, TValue>({
           <Input
             placeholder={filterPlaceholder}
             value={
-              (table.getColumn(filterKey)?.getFilterValue() as string) ?? ""
+              (table.getColumn(filterKey)?.getFilterValue() as string) ?? ''
             }
             onChange={(event) =>
               table.getColumn(filterKey)?.setFilterValue(event.target.value)
@@ -113,26 +152,37 @@ export function DataTable<TData, TValue>({
           </TableHeader>
           <TableBody>
             {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  className={getRowHref ? "cursor-pointer" : undefined}
-                  onClick={() => {
-                    if (getRowHref) {
-                      router.push(getRowHref(row.original));
-                    }
-                  }}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
+              table.getRowModel().rows.map((row) => {
+                const original = row.original as { isRetired?: boolean };
+                const isRetired = Boolean(original.isRetired);
+                const className = [
+                  getRowHref ? 'cursor-pointer' : '',
+                  isRetired ? 'bg-red-200' : '',
+                ]
+                  .filter(Boolean)
+                  .join(' ');
+
+                return (
+                  <TableRow
+                    key={row.id}
+                    className={className || undefined}
+                    onClick={() => {
+                      if (getRowHref) {
+                        router.push(getRowHref(row.original));
+                      }
+                    }}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                );
+              })
             ) : (
               <TableRow>
                 <TableCell
@@ -148,13 +198,17 @@ export function DataTable<TData, TValue>({
       </div>
       <div className="flex items-center justify-end gap-2">
         <div className="text-muted-foreground text-sm">
-          Page {table.getState().pagination.pageIndex + 1} of{" "}
+          Page {table.getState().pagination.pageIndex + 1} of{' '}
           {table.getPageCount()}
         </div>
         <Button
           variant="outline"
           size="sm"
-          onClick={() => table.previousPage()}
+          onClick={() => {
+            const nextPageIndex = Math.max(0, pagination.pageIndex - 1);
+            table.setPageIndex(nextPageIndex);
+            setPageQuery(nextPageIndex + 1);
+          }}
           disabled={!table.getCanPreviousPage()}
         >
           Previous
@@ -162,7 +216,14 @@ export function DataTable<TData, TValue>({
         <Button
           variant="outline"
           size="sm"
-          onClick={() => table.nextPage()}
+          onClick={() => {
+            const nextPageIndex = Math.min(
+              table.getPageCount() - 1,
+              pagination.pageIndex + 1,
+            );
+            table.setPageIndex(nextPageIndex);
+            setPageQuery(nextPageIndex + 1);
+          }}
           disabled={!table.getCanNextPage()}
         >
           Next

@@ -25,6 +25,7 @@ type Props = {
   children: ReactNode;
   description?: string;
   disabled?: boolean;
+  modal?: boolean;
 };
 
 const AppDrawer = ({
@@ -33,6 +34,7 @@ const AppDrawer = ({
   children,
   description,
   disabled,
+  modal = false,
 }: Props) => {
   const [open, setOpen] = useState(false);
 
@@ -47,7 +49,7 @@ const AppDrawer = ({
   }
 
   return (
-    <Drawer direction="right" modal={false} open={open} onOpenChange={setOpen}>
+    <Drawer direction="right" modal={modal} open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>
         <Button>{labelBtn}</Button>
       </DrawerTrigger>

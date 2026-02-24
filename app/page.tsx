@@ -14,6 +14,7 @@ export default async function Home() {
     position: player.position,
     club: player.histories[0]?.toClub?.name ?? null,
     currentValue: player.values[0]?.value ?? null,
+    isRetired: player.isRetired,
   }));
 
   return (

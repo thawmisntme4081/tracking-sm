@@ -39,7 +39,7 @@ function formatFeeOrLoan(history: TransferHistoryItem) {
   return formatMoney(history.fee);
 }
 
-export function TransferHistory({ data }: TransferHistoryProps) {
+export default function TransferHistory({ data }: TransferHistoryProps) {
   return (
     <Card>
       <CardHeader>
