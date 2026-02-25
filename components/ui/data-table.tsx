@@ -6,15 +6,13 @@ import {
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
-  getPaginationRowModel,
   getSortedRowModel,
-  type PaginationState,
   type SortingState,
   useReactTable,
 } from '@tanstack/react-table';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -31,6 +29,8 @@ type DataTableProps<TData, TValue> = {
   data: TData[];
   filterKey?: string;
   filterPlaceholder?: string;
+  totalPages: number;
+  page: number;
   getRowHref?: (row: TData) => string;
 };
 
@@ -39,6 +39,8 @@ export function DataTable<TData, TValue>({
   data,
   filterKey,
   filterPlaceholder = 'Filter...',
+  totalPages,
+  page,
   getRowHref,
 }: DataTableProps<TData, TValue>) {
   const router = useRouter();
@@ -47,43 +49,6 @@ export function DataTable<TData, TValue>({
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter] = useState('');
-  const [pagination, setPagination] = useState<PaginationState>(() => {
-    const page = Number(searchParams.get('page') ?? '1');
-    const pageNumber = Number.isFinite(page) && page > 0 ? Math.floor(page) : 1;
-
-    return {
-      pageIndex: pageNumber - 1,
-      pageSize: 10,
-    };
-  });
-
-  useEffect(() => {
-    const page = Number(searchParams.get('page') ?? '1');
-    const pageNumber = Number.isFinite(page) && page > 0 ? Math.floor(page) : 1;
-    const nextPageIndex = pageNumber - 1;
-
-    setPagination((prev) =>
-      prev.pageIndex === nextPageIndex
-        ? prev
-        : {
-            ...prev,
-            pageIndex: nextPageIndex,
-          },
-    );
-  }, [searchParams]);
-
-  const setPageQuery = (pageNumber: number) => {
-    const params = new URLSearchParams(searchParams.toString());
-
-    if (pageNumber <= 1) {
-      params.delete('page');
-    } else {
-      params.set('page', String(pageNumber));
-    }
-
-    const query = params.toString();
-    router.replace(query ? `${pathname}?${query}` : pathname);
-  };
 
   const table = useReactTable({
     data,
@@ -91,18 +56,21 @@ export function DataTable<TData, TValue>({
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onGlobalFilterChange: setGlobalFilter,
-    onPaginationChange: setPagination,
     state: {
       sorting,
       columnFilters,
       globalFilter,
-      pagination,
     },
   });
+
+  const setPage = (nextPage: number) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('page', String(nextPage));
+    router.push(`${pathname}?${params.toString()}`);
+  };
 
   return (
     <div className="space-y-4">
@@ -198,33 +166,21 @@ export function DataTable<TData, TValue>({
       </div>
       <div className="flex items-center justify-end gap-2">
         <div className="text-muted-foreground text-sm">
-          Page {table.getState().pagination.pageIndex + 1} of{' '}
-          {table.getPageCount()}
+          Page {page} of {totalPages}
         </div>
         <Button
           variant="outline"
           size="sm"
-          onClick={() => {
-            const nextPageIndex = Math.max(0, pagination.pageIndex - 1);
-            table.setPageIndex(nextPageIndex);
-            setPageQuery(nextPageIndex + 1);
-          }}
-          disabled={!table.getCanPreviousPage()}
+          onClick={() => setPage(page - 1)}
+          disabled={page <= 1}
         >
           Previous
         </Button>
         <Button
           variant="outline"
           size="sm"
-          onClick={() => {
-            const nextPageIndex = Math.min(
-              table.getPageCount() - 1,
-              pagination.pageIndex + 1,
-            );
-            table.setPageIndex(nextPageIndex);
-            setPageQuery(nextPageIndex + 1);
-          }}
-          disabled={!table.getCanNextPage()}
+          onClick={() => setPage(page + 1)}
+          disabled={page >= totalPages || totalPages === 0}
         >
           Next
         </Button>

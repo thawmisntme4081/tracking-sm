@@ -138,36 +138,53 @@ export async function importPlayersFromCsv(
   };
 }
 
-export async function getPlayersForTable() {
-  return prisma.player.findMany({
-    orderBy: [{ updatedAt: 'desc' }],
-    select: {
-      id: true,
-      firstName: true,
-      lastName: true,
-      yearOfBirth: true,
-      position: true,
-      isRetired: true,
-      histories: {
-        orderBy: { eventDate: 'desc' },
-        take: 1,
-        select: {
-          toClub: {
-            select: {
-              id: true,
-              name: true,
-            },
+export async function getPlayersForTable(page = 1, pageSize = 10) {
+  'use cache';
+  const safePageSize = Math.max(1, pageSize);
+  const skip = (page - 1) * safePageSize;
+
+  const [data, total] = await prisma.$transaction([
+    prisma.player.findMany({
+      orderBy: [{ updatedAt: 'desc' }],
+      take: safePageSize,
+      skip,
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        yearOfBirth: true,
+        position: true,
+        isRetired: true,
+        histories: {
+          orderBy: { eventDate: 'desc' },
+          take: 1,
+          select: {
+            toClub: { select: { name: true } },
           },
         },
-      },
-      values: {
-        orderBy: { date: 'desc' },
-        take: 1,
-        select: {
-          value: true,
-          date: true,
+        values: {
+          orderBy: { date: 'desc' },
+          take: 1,
+          select: { value: true },
         },
       },
-    },
-  });
+    }),
+    prisma.player.count(),
+  ]);
+
+  const players = data.map((player) => ({
+    id: player.id,
+    firstName: player.firstName,
+    lastName: player.lastName,
+    yearOfBirth: player.yearOfBirth,
+    position: player.position,
+    club: player.histories[0]?.toClub?.name ?? null,
+    currentValue: player.values[0]?.value ?? null,
+    isRetired: player.isRetired,
+  }));
+
+  return {
+    players,
+    totalPages: Math.ceil(total / safePageSize),
+  };
 }

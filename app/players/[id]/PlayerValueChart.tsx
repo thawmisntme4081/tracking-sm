@@ -39,6 +39,7 @@ export default function PlayerValueChart({
           labelBtn="Update value"
           title="Update value"
           disabled={actionDisabled}
+          modal
         >
           <UpdateValueForm playerId={playerId} />
         </AppDrawer>

@@ -1,14 +1,11 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { format } from 'date-fns';
-import { CalendarIcon } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { createPlayerValue } from '@/app/actions/playerDetail/player';
 import InputField from '@/components/common/InputField';
 import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
 import {
   Form,
   FormControl,
@@ -17,14 +14,13 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
+import { Input } from '@/components/ui/input';
+import { formatDateInput } from '@/lib/format';
 import { tryCatch } from '@/lib/tryCatch';
-import { cn } from '@/lib/utils';
-import { type UpdateValueSchema, updateValueSchema } from './validation';
+import {
+  type UpdateValueSchemaInput,
+  updateValueFormSchema,
+} from './validation';
 
 type Props = {
   playerId: string;
@@ -32,13 +28,13 @@ type Props = {
 };
 
 const UpdateValueForm = ({ playerId, onCloseDrawer }: Props) => {
-  const defaultValues: Partial<UpdateValueSchema> = {
-    date: undefined,
+  const defaultValues: Partial<UpdateValueSchemaInput> = {
+    date: '',
     marketValue: undefined,
   };
 
-  const form = useForm<UpdateValueSchema>({
-    resolver: zodResolver(updateValueSchema),
+  const form = useForm<UpdateValueSchemaInput>({
+    resolver: zodResolver(updateValueFormSchema),
     defaultValues,
   });
 
@@ -47,7 +43,7 @@ const UpdateValueForm = ({ playerId, onCloseDrawer }: Props) => {
     onCloseDrawer?.();
   };
 
-  const onSubmit = form.handleSubmit(async (data: UpdateValueSchema) => {
+  const onSubmit = form.handleSubmit(async (data: UpdateValueSchemaInput) => {
     const [response, error] = await tryCatch(
       createPlayerValue({ ...data, playerId }),
     );
@@ -69,41 +65,24 @@ const UpdateValueForm = ({ playerId, onCloseDrawer }: Props) => {
             control={form.control}
             name="date"
             render={({ field }) => (
-              <FormItem className="flex flex-col">
+              <FormItem>
                 <FormLabel>Date</FormLabel>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className={cn(
-                          'w-full justify-start text-left font-normal',
-                          !field.value && 'text-muted-foreground',
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {field.value
-                          ? format(field.value, 'PPP')
-                          : 'Pick a date'}
-                      </Button>
-                    </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={field.value}
-                      onSelect={field.onChange}
-                      autoFocus
-                    />
-                  </PopoverContent>
-                </Popover>
+                <FormControl>
+                  <Input
+                    {...field}
+                    placeholder="YYYY-MM-DD"
+                    value={field.value ?? ''}
+                    onChange={(event) =>
+                      field.onChange(formatDateInput(event.target.value))
+                    }
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
 
-          <InputField<UpdateValueSchema>
+          <InputField<UpdateValueSchemaInput>
             control={form.control}
             name="marketValue"
             label="Value"

@@ -1,57 +1,97 @@
-import { notFound } from 'next/navigation';
-import { getClubs } from '@/app/actions/clubs';
-import { getPLayer } from '@/app/actions/playerDetail/player';
-import { getPlayerHistories } from '@/app/actions/playerDetail/playerHistory';
-import AddTransferForm from '@/components/AddTransfer/AddTransferForm';
-import AppDrawer from '@/components/common/AppDrawer';
-import PlayerValueChart from './PlayerValueChart';
-import TransferHistory from './TransferHistory';
+import { Suspense } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
+import PlayerHeaderSection from './PlayerHeaderSection';
+import PlayerValueChartSection from './PlayerValueChartSection';
+import TransferHistorySection from './TransferHistorySection';
 
 type Props = {
   params: Promise<{ id: string }>;
 };
 
-export default async function PlayerDetailPage({ params }: Props) {
+export default function PlayerDetailPage({ params }: Props) {
+  return (
+    <Suspense fallback={<PlayerDetailSkeleton />}>
+      <PlayerDetailContent params={params} />
+    </Suspense>
+  );
+}
+
+async function PlayerDetailContent({ params }: Props) {
   const { id } = await params;
-
-  const player = await getPLayer(id);
-
-  if (!player) {
-    notFound();
-  }
-
-  const clubs = await getClubs();
-
-  const playerHistory = await getPlayerHistories(id);
-
-  const valueHistory = player.values.map(({ date, value }) => ({
-    date: date.toISOString(),
-    value,
-  }));
 
   return (
     <section className="space-y-6">
-      <div className="flex items-center gap-4">
-        <h1 className="text-2xl font-semibold">
-          {player.firstName} {player.lastName.toUpperCase()}
-        </h1>
-        <AppDrawer
-          labelBtn="Add transfer"
-          title="Add transfer"
-          disabled={player.isRetired}
-        >
-          <AddTransferForm playerId={id} clubs={clubs} />
-        </AppDrawer>
-      </div>
+      <Suspense fallback={<HeaderSkeleton />}>
+        <PlayerHeaderSection id={id} />
+      </Suspense>
+
       <div className="grid grid-cols-2 gap-4">
-        <TransferHistory data={playerHistory} />
-        <PlayerValueChart
-          data={valueHistory}
-          playerId={id}
-          type="linear"
-          actionDisabled={player.isRetired}
-        />
+        <Suspense fallback={<TransferHistoryCardSkeleton />}>
+          <TransferHistorySection id={id} />
+        </Suspense>
+        <Suspense fallback={<PlayerValueChartCardSkeleton />}>
+          <PlayerValueChartSection id={id} />
+        </Suspense>
       </div>
     </section>
+  );
+}
+
+function PlayerDetailSkeleton() {
+  return (
+    <section className="space-y-6">
+      <HeaderSkeleton />
+      <div className="grid grid-cols-2 gap-4">
+        <TransferHistoryCardSkeleton />
+        <PlayerValueChartCardSkeleton />
+      </div>
+    </section>
+  );
+}
+
+function HeaderSkeleton() {
+  return <Skeleton className="h-8 w-80" />;
+}
+
+function TransferHistoryCardSkeleton() {
+  return (
+    <div className="rounded-xl border bg-card p-6 space-y-4">
+      <div className="flex items-center justify-between">
+        <Skeleton className="h-6 w-56" />
+        <Skeleton className="h-9 w-9" />
+      </div>
+
+      <div className="space-y-3">
+        <div className="grid grid-cols-5 gap-3">
+          <Skeleton className="h-4" />
+          <Skeleton className="h-4" />
+          <Skeleton className="h-4" />
+          <Skeleton className="h-4" />
+          <Skeleton className="h-4" />
+        </div>
+
+        {Array.from({ length: 6 }, (_, index) => (
+          <div key={String(index)} className="grid grid-cols-5 gap-3">
+            <Skeleton className="h-4" />
+            <Skeleton className="h-4" />
+            <Skeleton className="h-4" />
+            <Skeleton className="h-4" />
+            <Skeleton className="h-4" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function PlayerValueChartCardSkeleton() {
+  return (
+    <div className="rounded-xl border bg-card p-6 space-y-4">
+      <div className="flex items-center justify-between">
+        <Skeleton className="h-6 w-56" />
+        <Skeleton className="h-9 w-32" />
+      </div>
+      <Skeleton className="h-70 w-full rounded-lg" />
+    </div>
   );
 }

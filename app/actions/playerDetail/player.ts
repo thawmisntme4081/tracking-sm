@@ -7,8 +7,8 @@ import {
   transferSchema,
 } from '@/components/AddTransfer/validation';
 import {
+  createPlayerValueSchema,
   type UpdateValueValidate,
-  updateValueSchema,
 } from '@/components/UpdateValue/validation';
 import prisma from '@/lib/prisma';
 
@@ -17,9 +17,6 @@ const updateTransferSchema = z
     playerId: z.string().uuid('Player must be a valid UUID'),
   })
   .and(transferSchema);
-const createPlayerValueSchema = updateValueSchema.extend({
-  playerId: z.string().uuid('Player must be a valid UUID'),
-});
 
 export const getPLayer = async (id: string) => {
   return await prisma.player.findUnique({
@@ -136,9 +133,7 @@ export async function updateTransfer(rawValues: TransferValidate) {
 export async function createPlayerValue(rawValues: UpdateValueValidate) {
   const values = createPlayerValueSchema.parse(rawValues);
   const { playerId, date, marketValue } = values;
-  const utcDate = new Date(
-    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()),
-  );
+  const utcDate = new Date(date);
 
   try {
     await prisma.playerValue.create({

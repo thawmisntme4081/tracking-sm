@@ -2,10 +2,11 @@
 
 import type { ColumnDef } from '@tanstack/react-table';
 import { ArrowUpDown } from 'lucide-react';
+import { Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/ui/data-table';
 
-export type PlayerRow = {
+type PlayerRow = {
   id: string;
   firstName: string;
   lastName: string;
@@ -110,17 +111,24 @@ const columns: ColumnDef<PlayerRow>[] = [
 ];
 
 type PlayersTableProps = {
-  data: PlayerRow[];
+  data: {
+    players: PlayerRow[];
+    totalPages: number;
+  };
+  page: number;
 };
 
-export default function PlayersTable({ data }: PlayersTableProps) {
+export default function PlayersTable({ data, page }: PlayersTableProps) {
+  const { players, totalPages } = data;
   return (
     <DataTable
       columns={columns}
-      data={data}
+      data={players}
       filterKey="lastName"
       filterPlaceholder="Filter by last name..."
       getRowHref={(row) => `/players/${row.id}`}
+      totalPages={totalPages}
+      page={page}
     />
   );
 }

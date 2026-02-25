@@ -1,3 +1,6 @@
+import { getClubs } from '@/app/actions/clubs';
+import AddTransferForm from '@/components/AddTransfer/AddTransferForm';
+import AppDrawer from '@/components/common/AppDrawer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
@@ -29,6 +32,8 @@ type TransferHistoryItem = {
 
 type TransferHistoryProps = {
   data: TransferHistoryItem[];
+  id: string;
+  disabledBtn?: boolean;
 };
 
 function formatFeeOrLoan(history: TransferHistoryItem) {
@@ -39,11 +44,20 @@ function formatFeeOrLoan(history: TransferHistoryItem) {
   return formatMoney(history.fee);
 }
 
-export default function TransferHistory({ data }: TransferHistoryProps) {
+export default async function TransferHistory({
+  data,
+  id,
+  disabledBtn = false,
+}: TransferHistoryProps) {
+  const clubs = await getClubs();
+
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex items-center justify-between">
         <CardTitle>Player Transfer History</CardTitle>
+        <AppDrawer labelBtn="+" title="Add transfer" disabled={disabledBtn}>
+          <AddTransferForm playerId={id} clubs={clubs} />
+        </AppDrawer>
       </CardHeader>
       <CardContent className="space-y-2 text-sm">
         {data.length === 0 ? (

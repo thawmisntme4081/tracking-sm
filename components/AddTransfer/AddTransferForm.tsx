@@ -1,8 +1,6 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { format } from 'date-fns';
-import { CalendarIcon } from 'lucide-react';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -11,7 +9,6 @@ import ComboboxField from '@/components/common/ComboboxField';
 import InputField from '@/components/common/InputField';
 import SelectField from '@/components/common/SelectField';
 import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
 import {
   Form,
   FormControl,
@@ -21,14 +18,9 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
+import { formatDateInput } from '@/lib/format';
 import { tryCatch } from '@/lib/tryCatch';
-import { cn } from '@/lib/utils';
-import { type TransferSchema, transferSchema } from './validation';
+import { type TransferSchemaInput, transferFormSchema } from './validation';
 
 type Props = {
   playerId: string;
@@ -37,17 +29,17 @@ type Props = {
 };
 
 const AddTransferForm = ({ playerId, clubs, onCloseDrawer }: Props) => {
-  const defaultValues: Partial<TransferSchema> = {
+  const defaultValues: Partial<TransferSchemaInput> = {
     type: 'TRANSFER',
-    date: undefined,
+    date: '',
     clubId: '',
     marketValue: undefined,
     onLoan: undefined,
     fee: undefined,
   };
 
-  const form = useForm<TransferSchema>({
-    resolver: zodResolver(transferSchema),
+  const form = useForm<TransferSchemaInput>({
+    resolver: zodResolver(transferFormSchema),
     defaultValues,
   });
 
@@ -56,7 +48,7 @@ const AddTransferForm = ({ playerId, clubs, onCloseDrawer }: Props) => {
     onCloseDrawer?.();
   };
 
-  const onSubmit = form.handleSubmit(async (data: TransferSchema) => {
+  const onSubmit = form.handleSubmit(async (data: TransferSchemaInput) => {
     const [response, error] = await tryCatch(
       updateTransfer({ ...data, playerId }),
     );
@@ -83,7 +75,7 @@ const AddTransferForm = ({ playerId, clubs, onCloseDrawer }: Props) => {
     <Form {...form}>
       <form onSubmit={onSubmit}>
         <div className="grid gap-4 p-4">
-          <SelectField<TransferSchema, 'TRANSFER' | 'LOAN'>
+          <SelectField<TransferSchemaInput, 'TRANSFER' | 'LOAN'>
             control={form.control}
             name="type"
             label="Type"
@@ -99,35 +91,18 @@ const AddTransferForm = ({ playerId, clubs, onCloseDrawer }: Props) => {
             control={form.control}
             name="date"
             render={({ field }) => (
-              <FormItem className="flex flex-col">
+              <FormItem>
                 <FormLabel>Date</FormLabel>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className={cn(
-                          'w-full justify-start text-left font-normal',
-                          !field.value && 'text-muted-foreground',
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {field.value
-                          ? format(field.value, 'PPP')
-                          : 'Pick a date'}
-                      </Button>
-                    </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={field.value}
-                      onSelect={field.onChange}
-                      autoFocus
-                    />
-                  </PopoverContent>
-                </Popover>
+                <FormControl>
+                  <Input
+                    {...field}
+                    placeholder="YYYY-MM-DD"
+                    value={field.value ?? ''}
+                    onChange={(event) =>
+                      field.onChange(formatDateInput(event.target.value))
+                    }
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -143,7 +118,7 @@ const AddTransferForm = ({ playerId, clubs, onCloseDrawer }: Props) => {
             data={clubs}
           />
 
-          <InputField<TransferSchema>
+          <InputField<TransferSchemaInput>
             control={form.control}
             name="marketValue"
             label="Market Value"
@@ -156,35 +131,18 @@ const AddTransferForm = ({ playerId, clubs, onCloseDrawer }: Props) => {
               control={form.control}
               name="onLoan"
               render={({ field }) => (
-                <FormItem className="flex flex-col">
+                <FormItem>
                   <FormLabel>Loan Until</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className={cn(
-                            'w-full justify-start text-left font-normal',
-                            !field.value && 'text-muted-foreground',
-                          )}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {field.value
-                            ? format(field.value, 'PPP')
-                            : 'Pick a date'}
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        autoFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      placeholder="YYYY-MM-DD"
+                      value={field.value ?? ''}
+                      onChange={(event) =>
+                        field.onChange(formatDateInput(event.target.value))
+                      }
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
