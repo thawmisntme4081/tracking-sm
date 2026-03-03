@@ -1,5 +1,6 @@
 'use server';
 
+import { revalidatePath } from 'next/cache';
 import {
   type PlayerSchema,
   playerSchema,
@@ -38,6 +39,8 @@ export async function savePlayer(values: PlayerSchema) {
         },
       },
     });
+
+    revalidatePath(`/`);
 
     return {
       message: 'Store player successfully',

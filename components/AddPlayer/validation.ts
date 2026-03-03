@@ -13,8 +13,7 @@ export const playerSchema = z.object({
   yearOfBirth: z
     .number({ invalid_type_error: 'Year of birth is required' })
     .int('Year of birth must be a whole number')
-    .min(1900, 'Year of birth must be 1900 or later')
-    .max(new Date().getFullYear(), 'Year of birth cannot be in the future'),
+    .min(1900, 'Year of birth must be 1900 or later'),
   position: z.enum(['GK', 'DF', 'MF', 'CF'], {
     errorMap: () => ({ message: 'Position is required' }),
   }),
