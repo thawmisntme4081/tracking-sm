@@ -12,7 +12,10 @@ import {
 } from '@tanstack/react-table';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useState } from 'react';
+import { type ChangeEvent, useRef, useState } from 'react';
+import { toast } from 'sonner';
+import { uploadPlayerValuesFromCsv } from '@/app/actions/players';
+import { parseCsv } from '@/components/AddPlayer/csv';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -97,8 +100,7 @@ export function DataTable<TData, TValue>({
         <Button asChild>
           <Link href="/add-player">Add player</Link>
         </Button>
-        {/* Todo: open modal and update player value */}
-        <Button>Update player value</Button>
+        <UpdatePlayerValue />
       </div>
       <div className="rounded-md border">
         <Table>
@@ -186,5 +188,97 @@ export function DataTable<TData, TValue>({
         </Button>
       </div>
     </div>
+  );
+}
+
+const requiredColumns = ['playerId', 'date', 'value'] as const;
+
+function UpdatePlayerValue() {
+  const router = useRouter();
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const handleChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    setIsUploading(true);
+
+    try {
+      const text = await file.text();
+      const { headers, rows } = parseCsv(text);
+
+      if (headers.length === 0) {
+        toast.error('CSV file is empty.');
+        return;
+      }
+
+      const normalizedHeaders = headers.map((header) => header.trim());
+      const missingColumns = requiredColumns.filter(
+        (column) => !normalizedHeaders.includes(column),
+      );
+
+      if (missingColumns.length > 0) {
+        toast.error(`Missing required columns: ${missingColumns.join(', ')}`);
+        return;
+      }
+
+      const headerIndex = Object.fromEntries(
+        normalizedHeaders.map((header, index) => [header, index]),
+      ) as Record<string, number>;
+
+      const parsedRows = rows.map((row) => ({
+        playerId: row[headerIndex.playerId] ?? '',
+        date: row[headerIndex.date] ?? '',
+        value: Number(row[headerIndex.value] ?? ''),
+      }));
+
+      const result = await uploadPlayerValuesFromCsv(parsedRows);
+
+      if (result.createdCount > 0) {
+        toast.success(`Uploaded ${result.createdCount} value row(s).`);
+      }
+
+      if (result.errorCount > 0) {
+        const preview = result.errors
+          .slice(0, 3)
+          .map((error) => `Row ${error.row}: ${error.message}`)
+          .join(' | ');
+        toast.error(`Failed ${result.errorCount} row(s). ${preview}`);
+      }
+
+      if (result.createdCount === 0 && result.errorCount === 0) {
+        toast.info('No rows to import.');
+      }
+
+      router.refresh();
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to upload player values CSV.');
+    } finally {
+      setIsUploading(false);
+      event.target.value = '';
+    }
+  };
+
+  return (
+    <>
+      <input
+        ref={inputRef}
+        type="file"
+        accept=".csv"
+        className="hidden"
+        onChange={handleChange}
+      />
+      <Button
+        type="button"
+        onClick={() => inputRef.current?.click()}
+        disabled={isUploading}
+      >
+        {isUploading ? 'Uploading...' : 'Upload player value'}
+      </Button>
+    </>
   );
 }

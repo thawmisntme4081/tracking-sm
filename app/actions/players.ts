@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { z } from 'zod';
 import {
   type PlayerSchema,
   playerSchema,
@@ -52,6 +53,22 @@ export async function savePlayer(values: PlayerSchema) {
 }
 
 export type ImportPlayersResult = {
+  createdCount: number;
+  errorCount: number;
+  errors: { row: number; message: string }[];
+};
+
+const playerValueCsvRowSchema = z.object({
+  playerId: z.string().uuid('playerId must be a valid UUID'),
+  date: z.string().refine((value) => !Number.isNaN(new Date(value).getTime()), {
+    message: 'date is invalid',
+  }),
+  value: z.number().min(0, 'value must be 0 or higher'),
+});
+
+type PlayerValueCsvRow = z.infer<typeof playerValueCsvRowSchema>;
+
+export type ImportPlayerValuesResult = {
   createdCount: number;
   errorCount: number;
   errors: { row: number; message: string }[];
@@ -141,6 +158,65 @@ export async function importPlayersFromCsv(
   };
 }
 
+export async function uploadPlayerValuesFromCsv(
+  rows: PlayerValueCsvRow[],
+): Promise<ImportPlayerValuesResult> {
+  const errors: ImportPlayerValuesResult['errors'] = [];
+  let createdCount = 0;
+
+  for (const [index, row] of rows.entries()) {
+    const parsed = playerValueCsvRowSchema.safeParse(row);
+
+    if (!parsed.success) {
+      errors.push({
+        row: index + 2,
+        message: parsed.error.errors[0]?.message ?? 'Invalid row data',
+      });
+      continue;
+    }
+
+    const { playerId, date, value } = parsed.data;
+
+    try {
+      const player = await prisma.player.findUnique({
+        where: { id: playerId },
+        select: { id: true },
+      });
+
+      if (!player) {
+        errors.push({
+          row: index + 2,
+          message: `Player not found: ${playerId}`,
+        });
+        continue;
+      }
+
+      await prisma.playerValue.create({
+        data: {
+          playerId,
+          date: new Date(date),
+          value,
+        },
+      });
+
+      createdCount += 1;
+    } catch {
+      errors.push({
+        row: index + 2,
+        message: 'Failed to create player value',
+      });
+    }
+  }
+
+  revalidatePath('/');
+
+  return {
+    createdCount,
+    errorCount: errors.length,
+    errors,
+  };
+}
+
 export async function getPlayersForTable(page = 1, pageSize = 10) {
   'use cache';
   const safePageSize = Math.max(1, pageSize);
@@ -168,7 +244,7 @@ export async function getPlayersForTable(page = 1, pageSize = 10) {
         values: {
           orderBy: { date: 'desc' },
           take: 1,
-          select: { value: true },
+          select: { value: true, date: true },
         },
       },
     }),
@@ -184,6 +260,7 @@ export async function getPlayersForTable(page = 1, pageSize = 10) {
     club: player.histories[0]?.toClub?.name ?? null,
     currentValue: player.values[0]?.value ?? null,
     isRetired: player.isRetired,
+    lastUpdate: player.values[0]?.date ?? null,
   }));
 
   return {

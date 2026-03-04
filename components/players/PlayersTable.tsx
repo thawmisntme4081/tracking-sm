@@ -2,9 +2,9 @@
 
 import type { ColumnDef } from '@tanstack/react-table';
 import { ArrowUpDown } from 'lucide-react';
-import { Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/ui/data-table';
+import { formatDate } from '@/lib/format';
 
 type PlayerRow = {
   id: string;
@@ -15,6 +15,7 @@ type PlayerRow = {
   club: string | null;
   currentValue: number | null;
   isRetired: boolean;
+  lastUpdate: Date | null;
 };
 
 const columns: ColumnDef<PlayerRow>[] = [
@@ -106,6 +107,24 @@ const columns: ColumnDef<PlayerRow>[] = [
     cell: ({ row }) => {
       const value = row.original.currentValue;
       return value !== null ? value.toLocaleString() : '—';
+    },
+  },
+  {
+    accessorKey: 'lastUpdate',
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        size="sm"
+        className="-ml-3"
+        onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+      >
+        Last update
+        <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
+    cell: ({ row }) => {
+      const value = row.original.lastUpdate;
+      return value !== null ? formatDate(value) : '—';
     },
   },
 ];
